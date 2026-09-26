@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ConversationController extends Controller
 {
@@ -48,6 +49,22 @@ class ConversationController extends Controller
         );
 
         return (new MessageResource($message))->response()->setStatusCode(201);
+    }
+
+    public function stream(AskQuestionRequest $request, AnswerQuestion $answer): StreamedResponse
+    {
+        $conversation = $request->filled('conversation_id')
+            ? $this->find($request, $request->integer('conversation_id'))
+            : null;
+
+        $user = $request->user();
+        $question = $request->string('question')->trim()->value();
+        $documentIds = $request->input('document_ids');
+
+        return response()->eventStream(
+            fn () => $answer->stream($user, $question, $conversation, $documentIds),
+            endStreamWith: null,
+        );
     }
 
     private function find(Request $request, int $id): Conversation
