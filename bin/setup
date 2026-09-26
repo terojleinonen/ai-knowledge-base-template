@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# First-time local setup: dependencies, env files, database.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+command -v php >/dev/null || { echo "PHP 8.3+ is required"; exit 1; }
+command -v composer >/dev/null || { echo "Composer is required (https://getcomposer.org)"; exit 1; }
+command -v npm >/dev/null || { echo "Node.js 20+ is required"; exit 1; }
+
+php -r 'exit(extension_loaded("zip") ? 0 : 1);' || echo "⚠️  PHP zip extension missing: DOCX uploads will fail. (MacPorts: sudo port install php83-zip)"
+
+echo "→ Backend"
+(
+  cd backend
+  composer install --no-interaction
+  [ -f .env ] || { cp .env.example .env; php artisan key:generate --no-interaction; }
+  [ -f database/database.sqlite ] || touch database/database.sqlite
+  php artisan migrate --no-interaction
+)
+
+echo "→ Frontend"
+(
+  cd frontend
+  npm install
+  [ -f .env ] || cp .env.example .env
+)
+
+echo "✓ Done. Add an AI provider key to backend/.env (or configure Ollama), then run: bin/dev"

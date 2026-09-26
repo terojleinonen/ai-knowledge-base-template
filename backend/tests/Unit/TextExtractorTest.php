@@ -1,0 +1,41 @@
+<?php
+
+use App\Services\Documents\DocumentProcessingException;
+use App\Services\Documents\TextExtractor;
+
+beforeEach(fn () => $this->extractor = app(TextExtractor::class));
+
+it('normalizes whitespace in plain text', function () {
+    $text = "\xEF\xBB\xBFTitle\r\n\r\n\r\n\r\nLine   one\t\tcontinues  \nLine two";
+
+    expect($this->extractor->extract($text, 'txt'))->toBe("Title\n\nLine one continues\nLine two");
+});
+
+it('converts legacy encodings to UTF-8', function () {
+    expect($this->extractor->extract("Caf\xE9", 'md'))->toBe('Café');
+});
+
+it('extracts text from DOCX files', function () {
+    $path = tempnam(sys_get_temp_dir(), 'docx');
+    $zip = new ZipArchive;
+    $zip->open($path, ZipArchive::OVERWRITE);
+    $zip->addFromString('word/document.xml', '<w:document><w:body><w:p><w:r><w:t>First &amp; foremost</w:t></w:r></w:p><w:p><w:r><w:t>Second</w:t></w:r></w:p></w:body></w:document>');
+    $zip->close();
+
+    expect($this->extractor->extract(file_get_contents($path), 'docx'))->toBe("First & foremost\n\nSecond");
+
+    unlink($path);
+})->skip(! class_exists(ZipArchive::class), 'PHP zip extension is not installed.');
+
+it('extracts text from PDF files', function () {
+    expect($this->extractor->extract(file_get_contents(base_path('tests/Fixtures/hello.pdf')), 'pdf'))
+        ->toContain('Hello Knowledge Base');
+});
+
+it('rejects unsupported types', function () {
+    $this->extractor->extract('x', 'exe');
+})->throws(DocumentProcessingException::class);
+
+it('reports unreadable PDFs as processing errors', function () {
+    $this->extractor->extract('not a pdf', 'pdf');
+})->throws(DocumentProcessingException::class);
