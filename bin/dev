@@ -7,7 +7,9 @@ trap 'kill 0' EXIT INT TERM
 
 prefix() { sed -u "s/^/[$1] /" 2>/dev/null || sed "s/^/[$1] /"; }
 
-(cd backend && php artisan serve --port=8000 2>&1 | prefix api) &
+# Several workers so a streaming chat answer doesn't block other requests.
+# (--no-reload is required for workers; restart after editing backend/.env.)
+(cd backend && PHP_CLI_SERVER_WORKERS=4 php artisan serve --port=8000 --no-reload 2>&1 | prefix api) &
 (cd backend && php artisan queue:listen --tries=3 --timeout=900 2>&1 | prefix queue) &
 (cd frontend && npm run dev 2>&1 | prefix web) &
 

@@ -26,4 +26,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('conversations/{conversation}', [ConversationController::class, 'destroy'])->whereNumber('conversation');
 
     Route::post('chat', [ConversationController::class, 'ask'])->middleware('throttle:chat');
+    Route::post('chat/stream', [ConversationController::class, 'stream'])->middleware('throttle:chat');
 });

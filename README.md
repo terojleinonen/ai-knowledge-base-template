@@ -18,7 +18,8 @@ Upload ─▶ store file ─▶ ProcessDocument job (queue)
 
 Question ─▶ embed question ─▶ cosine search over the user's chunks (top-k)
          ─▶ prompt LLM with numbered sources + recent chat history
-         ─▶ answer with [n] citations, persisted to the conversation
+         ─▶ answer streamed token-by-token (SSE) with [n] citations,
+            persisted to the conversation
 ```
 
 - Every query is scoped to the authenticated user's documents. There's no cross-tenant retrieval, and tests cover this.
@@ -114,6 +115,7 @@ All routes are prefixed with `/api`. Authenticated routes need `Authorization: B
 | GET / DELETE | `/documents/{id}` | Show / delete (removes file and chunks) |
 | POST | `/documents/{id}/reprocess` | Retry ingestion |
 | POST | `/chat` | `{ question, conversation_id?, document_ids? }` → assistant message with `sources` |
+| POST | `/chat/stream` | Same input; server-sent events: `sources` → `delta`… → `done` (saved message) or `error` |
 | GET / DELETE | `/conversations`, `/conversations/{id}` | History |
 
 Rate limits: auth 10/min per IP, uploads 30/min, chat 20/min per user.
@@ -125,6 +127,8 @@ The backend ships with a production `Dockerfile` (FrankenPHP). Run the same imag
 - **web:** default command. It caches config, runs migrations and serves on `:8080`.
 - **worker:** `php artisan queue:work --tries=3 --timeout=900`
 
+Streaming answers need a server that doesn't buffer responses. FrankenPHP streams out of the box. Behind nginx, the API already sends `X-Accel-Buffering: no`. Keep proxy read timeouts above `KB_CHAT_TIMEOUT`.
+
 Also run `php artisan schedule:work` (or cron `schedule:run`) for token/failed-job pruning.
 
 Recommended production settings are PostgreSQL (`DB_CONNECTION=pgsql`), `APP_ENV=production`, `APP_DEBUG=false`, and an S3-compatible `KB_UPLOAD_DISK` if you run multiple instances. Use Redis for the queue and cache at scale.
@@ -133,7 +137,6 @@ The frontend is a static build (`npm run build` → `dist/`) for any static host
 
 ## Roadmap
 
-- Streaming answers (SSE)
 - pgvector `VectorStore` for large corpora
 - OCR for scanned PDFs
 - Email verification and password reset
