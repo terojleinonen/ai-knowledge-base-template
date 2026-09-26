@@ -29,6 +29,18 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="KB_CHAT_PROVIDER" value="openai" force="true"/>
+        <env name="KB_CHAT_MODEL" value="gpt-4o-mini" force="true"/>
+        <env name="KB_EMBEDDINGS_PROVIDER" value="openai" force="true"/>
+        <env name="KB_EMBEDDINGS_MODEL" value="text-embedding-3-small" force="true"/>
+        <env name="KB_EMBEDDINGS_DIMENSIONS" value="" force="true"/>
+        <env name="KB_EMBEDDINGS_QUERY_PREFIX" value="" force="true"/>
+        <env name="KB_EMBEDDINGS_DOCUMENT_PREFIX" value="" force="true"/>
+        <env name="KB_CHUNK_SIZE" value="1200" force="true"/>
+        <env name="KB_CHUNK_OVERLAP" value="200" force="true"/>
+        <env name="KB_RETRIEVAL_TOP_K" value="6" force="true"/>
+        <env name="KB_RETRIEVAL_MIN_SCORE" value="0.2" force="true"/>
+        <env name="KB_HISTORY_MESSAGES" value="6" force="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

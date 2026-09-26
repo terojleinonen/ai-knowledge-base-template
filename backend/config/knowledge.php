@@ -21,9 +21,12 @@ return [
     'embeddings' => [
         'provider' => env('KB_EMBEDDINGS_PROVIDER', 'openai'),
         'model' => env('KB_EMBEDDINGS_MODEL', 'text-embedding-3-small'),
-        'dimensions' => env('KB_EMBEDDINGS_DIMENSIONS') !== null ? (int) env('KB_EMBEDDINGS_DIMENSIONS') : null,
+        'dimensions' => filled(env('KB_EMBEDDINGS_DIMENSIONS')) ? (int) env('KB_EMBEDDINGS_DIMENSIONS') : null,
         'batch_size' => (int) env('KB_EMBEDDINGS_BATCH_SIZE', 64),
         'timeout' => (int) env('KB_EMBEDDINGS_TIMEOUT', 60),
+        // Some models need task prefixes, e.g. nomic-embed-text: "search_query: " / "search_document: ".
+        'query_prefix' => env('KB_EMBEDDINGS_QUERY_PREFIX', ''),
+        'document_prefix' => env('KB_EMBEDDINGS_DOCUMENT_PREFIX', ''),
     ],
 
     /*

@@ -51,7 +51,7 @@ class ProcessDocument implements ShouldQueue
             return;
         }
 
-        $vectors = $embedder->embed($chunks);
+        $vectors = $embedder->embedDocuments($chunks);
 
         DB::transaction(function () use ($document, $chunks, $vectors, $embedder) {
             $document->chunks()->delete();

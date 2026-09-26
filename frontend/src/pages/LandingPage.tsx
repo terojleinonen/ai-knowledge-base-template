@@ -1,5 +1,4 @@
 import { Link } from 'react-router'
-import hero from '../assets/hero-mockup.png'
 import { useAuth } from '../auth/useAuth'
 import { Logo } from '../components/ui'
 
@@ -48,11 +47,6 @@ export function LandingPage() {
               {user ? 'Open your knowledge base' : 'Create a free account'}
             </Link>
           </div>
-          <img
-            src={hero}
-            alt="Knowledge Base dashboard showing uploaded documents and a chat with cited answers"
-            className="mx-auto mt-16 w-full max-w-5xl rounded-xl shadow-2xl ring-1 ring-slate-900/10"
-          />
         </section>
 
         <section className="border-t border-slate-100 bg-slate-50">

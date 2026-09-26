@@ -33,7 +33,7 @@ Question ─▶ embed question ─▶ cosine search over the user's chunks (top-
 
 | Tool | Version | macOS (MacPorts) |
 |---|---|---|
-| PHP | 8.3+ with `pdo_sqlite`, `mbstring`, `intl`, `zip` | `sudo port install php83 php83-sqlite php83-mbstring php83-intl php83-zip` |
+| PHP | 8.3+ with `pdo_sqlite`, `mbstring`, `intl`, `zip`, `iconv` | `sudo port install php83 php83-sqlite php83-mbstring php83-intl php83-zip php83-iconv` |
 | Composer | 2.x | see [getcomposer.org](https://getcomposer.org/download/) |
 | Node.js | 20+ | `nvm install --lts` |
 
@@ -61,7 +61,7 @@ Open http://localhost:5173 and create an account.
 
 ```bash
 sudo port install ollama        # or download from ollama.com
-ollama serve &
+OLLAMA_KEEP_ALIVE=30m ollama serve &
 ollama pull nomic-embed-text    # embeddings (~270 MB)
 ollama pull qwen2.5:3b          # chat model (~2 GB)
 ```
@@ -69,11 +69,38 @@ ollama pull qwen2.5:3b          # chat model (~2 GB)
 ```dotenv
 KB_EMBEDDINGS_PROVIDER=ollama
 KB_EMBEDDINGS_MODEL=nomic-embed-text
+KB_EMBEDDINGS_QUERY_PREFIX="search_query: "
+KB_EMBEDDINGS_DOCUMENT_PREFIX="search_document: "
 KB_CHAT_PROVIDER=ollama
 KB_CHAT_MODEL=qwen2.5:3b
+KB_CHAT_TIMEOUT=300
+# Similarity scores depend on the embedding model. nomic-embed-text scores
+# unrelated text around 0.4-0.5, so the default of 0.2 lets everything through.
+KB_RETRIEVAL_MIN_SCORE=0.5
 ```
 
-> On older Intel Macs with 8 GB RAM, Ollama runs on the CPU only. Embeddings are fine, but a 3B chat model generates only a few tokens per second. A good middle ground is **local embeddings + a hosted chat model**. Any mix of providers works.
+> **Intel Macs:** Ollama tries to use the integrated Intel GPU through Metal and crashes (`GGML_ASSERT(buf_dst) failed`). Create CPU-only variants and use those model names instead:
+>
+> ```bash
+> printf 'FROM nomic-embed-text\nPARAMETER num_gpu 0\n' > /tmp/Modelfile && ollama create nomic-embed-text-cpu -f /tmp/Modelfile
+> printf 'FROM qwen2.5:3b\nPARAMETER num_gpu 0\n' > /tmp/Modelfile && ollama create qwen2.5-3b-cpu -f /tmp/Modelfile
+> ```
+>
+> Measured on a 2017 MacBook Pro (i5, 8 GB, CPU only) with `qwen2.5:3b`:
+>
+> | Step | Time |
+> |---|---|
+> | Ingesting a short document | ~2–6 s |
+> | Retrieval (embedding the question) | ~1.3 s |
+> | First word of the answer | ~12–35 s |
+> | Complete answer | ~25–55 s |
+> | First question after models were unloaded | +40 s per model (process startup) |
+>
+> Start Ollama with `OLLAMA_KEEP_ALIVE=30m ollama serve` so models stay loaded between questions.
+>
+> Answers were factually correct in testing, and the model admitted when documents didn't cover a question. However, the 3B model sometimes **cites the wrong source number**. If citation accuracy matters, use a larger or hosted chat model and keep local embeddings.
+
+After changing embedding model or prefixes, run `php artisan kb:reindex`.
 
 **Anthropic:** set `ANTHROPIC_API_KEY`, `KB_CHAT_PROVIDER=anthropic` and a model such as `KB_CHAT_MODEL=claude-haiku-4-5`. Anthropic doesn't offer embeddings, so keep another embeddings provider.
 
