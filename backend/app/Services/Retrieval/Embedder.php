@@ -12,7 +12,30 @@ class Embedder
         private readonly ?int $dimensions = null,
         private readonly int $batchSize = 64,
         private readonly int $timeout = 60,
+        private readonly string $queryPrefix = '',
+        private readonly string $documentPrefix = '',
     ) {}
+
+    /**
+     * Embed document chunks for storage.
+     *
+     * @param  list<string>  $texts
+     * @return list<list<float>>
+     */
+    public function embedDocuments(array $texts): array
+    {
+        return $this->embed(array_map(fn (string $t) => $this->documentPrefix.$t, $texts));
+    }
+
+    /**
+     * Embed a search query.
+     *
+     * @return list<float>
+     */
+    public function embedQuery(string $query): array
+    {
+        return $this->embed([$this->queryPrefix.$query])[0];
+    }
 
     /**
      * Embed the given texts, returning unit-length vectors in input order.
@@ -20,7 +43,7 @@ class Embedder
      * @param  list<string>  $texts
      * @return list<list<float>>
      */
-    public function embed(array $texts): array
+    private function embed(array $texts): array
     {
         $vectors = [];
 
@@ -44,6 +67,13 @@ class Embedder
      */
     public function identifier(): string
     {
-        return implode(':', array_filter([$this->provider, $this->model, $this->dimensions]));
+        $identifier = implode(':', array_filter([$this->provider, $this->model, $this->dimensions]));
+
+        // Prefixes change the vectors, so they are part of the model's identity.
+        if ($this->queryPrefix !== '' || $this->documentPrefix !== '') {
+            $identifier .= '+'.substr(md5($this->queryPrefix.'|'.$this->documentPrefix), 0, 8);
+        }
+
+        return $identifier;
     }
 }

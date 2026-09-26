@@ -2,8 +2,8 @@
 
 namespace App\Services\Documents;
 
+use Exception;
 use Smalot\PdfParser\Parser as PdfParser;
-use Throwable;
 use ZipArchive;
 
 class TextExtractor
@@ -31,8 +31,9 @@ class TextExtractor
     {
         try {
             return $this->pdfParser->parseContent($contents)->getText();
-        } catch (Throwable $e) {
-            throw new DocumentProcessingException('The PDF could not be read: '.$e->getMessage(), previous: $e);
+        } catch (Exception $e) {
+            // Parser exceptions mean a bad file. PHP Errors (server problems) propagate so the job retries and logs them.
+            throw new DocumentProcessingException('The PDF could not be read. It may be corrupted, encrypted or password-protected.', previous: $e);
         }
     }
 

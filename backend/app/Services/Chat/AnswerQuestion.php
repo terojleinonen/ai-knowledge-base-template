@@ -136,7 +136,7 @@ class AnswerQuestion
     {
         return $this->store->search(
             userId: $user->id,
-            queryVector: $this->embedder->embed([$question])[0],
+            queryVector: $this->embedder->embedQuery($question),
             embeddingModel: $this->embedder->identifier(),
             limit: (int) config('knowledge.retrieval.top_k'),
             minScore: (float) config('knowledge.retrieval.min_score'),

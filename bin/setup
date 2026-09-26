@@ -7,7 +7,9 @@ command -v php >/dev/null || { echo "PHP 8.3+ is required"; exit 1; }
 command -v composer >/dev/null || { echo "Composer is required (https://getcomposer.org)"; exit 1; }
 command -v npm >/dev/null || { echo "Node.js 20+ is required"; exit 1; }
 
-php -r 'exit(extension_loaded("zip") ? 0 : 1);' || echo "⚠️  PHP zip extension missing: DOCX uploads will fail. (MacPorts: sudo port install php83-zip)"
+for ext in iconv mbstring zip pdo_sqlite; do
+  php -r "exit(extension_loaded('$ext') ? 0 : 1);" || { echo "✗ PHP extension '$ext' is missing (MacPorts: sudo port install php83-$ext)"; exit 1; }
+done
 
 echo "→ Backend"
 (

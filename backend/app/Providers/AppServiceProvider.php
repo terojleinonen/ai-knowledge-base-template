@@ -29,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
             dimensions: config('knowledge.embeddings.dimensions'),
             batchSize: (int) config('knowledge.embeddings.batch_size'),
             timeout: (int) config('knowledge.embeddings.timeout'),
+            queryPrefix: (string) config('knowledge.embeddings.query_prefix'),
+            documentPrefix: (string) config('knowledge.embeddings.document_prefix'),
         ));
     }
 
