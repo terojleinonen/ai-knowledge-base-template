@@ -27,6 +27,7 @@ class AnswerQuestion
     public function __construct(
         private readonly Embedder $embedder,
         private readonly VectorStore $store,
+        private readonly CitationRepairer $citations,
     ) {}
 
     /**
@@ -55,7 +56,8 @@ class AnswerQuestion
      * "sources" once, "delta" per text fragment, then "done" (the saved message) or "error".
      *
      * The exchange is persisted when the answer completes, or with the partial
-     * answer if the client disconnects mid-stream.
+     * answer if the client disconnects mid-stream. Deltas carry the model's raw
+     * text; the "done" message has citations verified against the sources.
      *
      * @param  list<int>|null  $documentIds
      * @return Generator<int, StreamedEvent>
@@ -161,7 +163,10 @@ class AnswerQuestion
 
             $message = $conversation->messages()->create([
                 'role' => MessageRole::Assistant,
-                'content' => trim($answer),
+                'content' => $this->citations->repair(
+                    trim($answer),
+                    array_map(fn (SearchResult $r) => $r->content, $results),
+                ),
                 'sources' => $this->sources($results),
             ]);
 

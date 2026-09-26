@@ -61,6 +61,20 @@ it('streams sources, text deltas and the saved message', function () {
         ->and(Conversation::sole()->messages()->count())->toBe(2);
 });
 
+it('repairs citations in the saved message', function () {
+    // The model cites a source number that does not exist.
+    KnowledgeBaseAssistant::fake(['Employees receive twenty five vacation days annually [4].']);
+
+    $events = sseEvents($this->postJson('/api/chat/stream', ['question' => 'How many vacation days do employees receive?']));
+
+    $raw = collect($events)->where('event', 'delta')->pluck('data.text')->implode('');
+    $done = end($events)['data'];
+
+    expect($raw)->toContain('[4]')
+        ->and($done['content'])->toBe('Employees receive twenty five vacation days annually [1].')
+        ->and(Message::find($done['id'])->content)->toBe($done['content']);
+});
+
 it('streams the fallback answer without calling the model when nothing matches', function () {
     KnowledgeBaseAssistant::fake();
 
