@@ -18,12 +18,13 @@ Upload ─▶ store file ─▶ ProcessDocument job (queue)
 
 Question ─▶ embed question ─▶ cosine search over the user's chunks (top-k)
          ─▶ prompt LLM with numbered sources + recent chat history
-         ─▶ answer streamed token-by-token (SSE) with [n] citations,
-            persisted to the conversation
+         ─▶ answer streamed token-by-token (SSE) with [n] citations
+         ─▶ citations verified against the sources, then persisted
 ```
 
 - Every query is scoped to the authenticated user's documents. There's no cross-tenant retrieval, and tests cover this.
 - If nothing relevant is found, the API answers without calling the LLM, which saves cost and avoids hallucinations.
+- Citations are checked after generation (`CitationRepairer`). Each sentence is matched against the source passages by distinctive shared words and numbers. Wrong or non-existent source numbers are corrected, missing ones are added, and "not in the sources" sentences are left uncited. This matters most for small local models, which often get the facts right but the numbers wrong. Streamed text shows the model's raw citations until the answer completes.
 - Vectors are stored as compact float32 in the regular database (`DatabaseVectorStore`), so any database works with zero extra infrastructure. The `VectorStore` interface lets you swap in pgvector or Qdrant when you outgrow brute-force search (roughly tens of thousands of chunks per user).
 - Each document records which embedding model indexed it, so switching models never compares incompatible vectors. Run `php artisan kb:reindex` after switching.
 
@@ -98,7 +99,7 @@ KB_RETRIEVAL_MIN_SCORE=0.5
 >
 > Start Ollama with `OLLAMA_KEEP_ALIVE=30m ollama serve` so models stay loaded between questions.
 >
-> Answers were factually correct in testing, and the model admitted when documents didn't cover a question. However, the 3B model sometimes **cites the wrong source number**. If citation accuracy matters, use a larger or hosted chat model and keep local embeddings.
+> Answers were factually correct in testing, and the model admitted when documents didn't cover a question. On its own, the 3B model cited correctly in none of 6 test answers: citations were wrong, pointed to non-existent sources, or were missing. After citation repair, all 13 cited sentences pointed to the passage containing the fact. That's a small sample; it's a heuristic, not a guarantee.
 
 After changing embedding model or prefixes, run `php artisan kb:reindex`.
 
