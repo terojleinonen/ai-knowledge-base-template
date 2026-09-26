@@ -57,6 +57,11 @@ return [
         'min_score' => (float) env('KB_RETRIEVAL_MIN_SCORE', 0.2),
     ],
 
+    'citations' => [
+        // Verify and fix [n] citations against the sources after generation (see CitationRepairer).
+        'repair' => (bool) env('KB_CITATION_REPAIR', true),
+    ],
+
     'history' => [
         // Number of previous messages sent to the model as conversation context.
         'messages' => (int) env('KB_HISTORY_MESSAGES', 6),

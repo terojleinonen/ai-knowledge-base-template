@@ -132,3 +132,11 @@ it('removes inline reference phrases', function () {
         'Every employee receives a laptop of their choice [2]. You should ensure your laptop has full-disk encryption enabled to enhance security [1].'
     );
 });
+
+it('recognises "not in the sources" statements that refer to sources by number', function () {
+    // Real qwen2.5:3b outputs.
+    expect(CitationRepairer::isNotFoundStatement('[1] and [3] do not contain information about parking policies.'))->toBeTrue()
+        ->and(CitationRepairer::isNotFoundStatement('[1] does not contain information about the cost of the support contract.'))->toBeTrue()
+        ->and(CitationRepairer::isNotFoundStatement('Batteries are not covered by the warranty [1].'))->toBeFalse()
+        ->and(CitationRepairer::isNotFoundStatement('Confidential data may never be stored on personal devices [2].'))->toBeFalse();
+});

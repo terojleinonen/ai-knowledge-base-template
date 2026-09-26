@@ -1,0 +1,9 @@
+{
+  "name": "Fixture",
+  "documents": ["vacation.txt", "security.txt"],
+  "cases": [
+    {"question": "How many vacation days do employees receive annually?", "expect_documents": ["vacation"], "facts": [["thirty", "30"]]},
+    {"question": "Which password manager is approved?", "expect_documents": ["security"], "facts": ["1Password"]},
+    {"question": "Quarterly revenue figures?", "unanswerable": true}
+  ]
+}
