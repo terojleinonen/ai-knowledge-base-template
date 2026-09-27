@@ -4,11 +4,14 @@ use App\Enums\DocumentStatus;
 use App\Jobs\ProcessDocument;
 use App\Models\Document;
 use App\Models\User;
+use App\Services\Chat\AnswerQuestion;
 use App\Services\Retrieval\VectorCodec;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Ai\Embeddings;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
@@ -80,6 +83,20 @@ it('marks documents without text as failed with a helpful error', function () {
         ->error->toContain('No text could be extracted');
 
     Embeddings::assertNothingGenerated();
+});
+
+it('explains when the embeddings provider is out of quota', function () {
+    Embeddings::fake(fn () => throw InsufficientCreditsException::forProvider('openai', 429));
+    Exceptions::fake();
+    Storage::disk('local')->put('documents/notes.txt', 'Some meeting notes about the roadmap.');
+    $document = Document::factory()->for($this->user)->create(['path' => 'documents/notes.txt']);
+
+    // Tests run jobs synchronously, which rethrows after marking the job failed.
+    expect(fn () => ProcessDocument::dispatchSync($document))->toThrow(InsufficientCreditsException::class);
+
+    expect($document->refresh())
+        ->status->toBe(DocumentStatus::Failed)
+        ->error->toBe(AnswerQuestion::USAGE_LIMIT_MESSAGE);
 });
 
 it('lists only the current user\'s documents', function () {

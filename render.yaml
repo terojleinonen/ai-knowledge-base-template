@@ -41,9 +41,9 @@ services:
 
       # AI providers
       - key: KB_CHAT_PROVIDER
-        value: anthropic
+        value: openai
       - key: KB_CHAT_MODEL
-        value: claude-opus-5
+        value: gpt-6-luna      # or: anthropic + claude-opus-5 / claude-haiku-4-5
       - key: KB_EMBEDDINGS_PROVIDER
         value: openai
       - key: KB_EMBEDDINGS_MODEL
@@ -52,10 +52,10 @@ services:
         value: "4"
       - key: KB_RETRIEVAL_MIN_SCORE
         value: "0.2"           # calibrate with: php artisan kb:eval --retrieval-only
-      - key: ANTHROPIC_API_KEY
-        sync: false
       - key: OPENAI_API_KEY
         sync: false
+      # - key: ANTHROPIC_API_KEY  # only if KB_CHAT_PROVIDER=anthropic
+      #   sync: false
 
       # Public demo: guest sessions, no open registration, bounded spend
       - key: KB_DEMO_ENABLED
@@ -65,7 +65,7 @@ services:
       - key: KB_LIMIT_QUESTIONS_PER_USER
         value: "15"
       - key: KB_LIMIT_QUESTIONS_PER_DAY
-        value: "150"
+        value: "45"            # below OpenAI's 50 requests/day on accounts without credit
       - key: KB_LIMIT_DOCUMENTS_PER_USER
         value: "6"
       - key: KB_UPLOAD_MAX_KB

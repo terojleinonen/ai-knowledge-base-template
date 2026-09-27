@@ -140,3 +140,18 @@ it('recognises "not in the sources" statements that refer to sources by number',
         ->and(CitationRepairer::isNotFoundStatement('Batteries are not covered by the warranty [1].'))->toBeFalse()
         ->and(CitationRepairer::isNotFoundStatement('Confidential data may never be stored on personal devices [2].'))->toBeFalse();
 });
+
+it('recognises contractions with straight and curly apostrophes', function (string $text) {
+    expect(CitationRepairer::isNotFoundStatement($text))->toBeTrue();
+})->with([
+    'The provided sources don’t include a banana bread recipe. [1][2][3]',
+    "The provided sources don't include a banana bread recipe.",
+    'The documents don’t mention parking.',
+    'I couldn’t find anything about parking in the documents.',
+    "[1] doesn't cover the support contract price.",
+]);
+
+it('does not treat factual contractions as "not in the sources"', function () {
+    expect(CitationRepairer::isNotFoundStatement('Batteries aren’t covered by the warranty [1].'))->toBeFalse()
+        ->and(CitationRepairer::isNotFoundStatement("You don't need a certificate for the first three days [1]."))->toBeFalse();
+});

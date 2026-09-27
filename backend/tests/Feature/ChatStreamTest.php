@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Laravel\Ai\Embeddings;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
+use Laravel\Ai\Exceptions\RateLimitedException;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
@@ -107,6 +109,28 @@ it('emits an error event when retrieval fails', function () {
 
     expect(array_column($events, 'event'))->toBe(['error']);
     Exceptions::assertReported(RuntimeException::class);
+});
+
+it('explains provider usage limits instead of reporting a failure', function () {
+    Exceptions::fake();
+    KnowledgeBaseAssistant::fake(fn () => throw RateLimitedException::forProvider('openai', 429));
+
+    $events = sseEvents($this->postJson('/api/chat/stream', ['question' => 'How many vacation days do employees receive?']));
+
+    expect(end($events))->toBe(['event' => 'error', 'data' => ['message' => AnswerQuestion::USAGE_LIMIT_MESSAGE]]);
+});
+
+it('returns 503 with a clear message when the provider is out of quota', function () {
+    Exceptions::fake();
+    Embeddings::fake(fn () => throw InsufficientCreditsException::forProvider('openai', 429));
+
+    $this->postJson('/api/chat', ['question' => 'How many vacation days?'])
+        ->assertServiceUnavailable()
+        ->assertHeader('Retry-After', '3600')
+        ->assertJsonPath('message', AnswerQuestion::USAGE_LIMIT_MESSAGE);
+
+    $events = sseEvents($this->postJson('/api/chat/stream', ['question' => 'How many vacation days?']));
+    expect($events)->toBe([['event' => 'error', 'data' => ['message' => AnswerQuestion::USAGE_LIMIT_MESSAGE]]]);
 });
 
 it('keeps the partial answer when the client disconnects mid-stream', function () {

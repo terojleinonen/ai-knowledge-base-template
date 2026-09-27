@@ -144,13 +144,16 @@ class EvalRunner
     }
 
     /**
-     * Case-insensitive match that doesn't let "30" match "300".
+     * Case-insensitive match that doesn't let "30" match "300", and treats
+     * "5,000", "5 000" and "5000" as the same number.
      *
      * @param  list<string>  $alternatives
      */
     private function containsAny(string $text, array $alternatives): bool
     {
-        foreach ($alternatives as $alternative) {
+        $text = self::normalizeNumbers($text);
+
+        foreach (array_map(self::normalizeNumbers(...), $alternatives) as $alternative) {
             $pattern = '/(?<![\p{L}\p{N}])'.preg_quote($alternative, '/').'(?![\p{L}\p{N}])/iu';
 
             if (preg_match($pattern, $text) === 1) {
@@ -159,5 +162,11 @@ class EvalRunner
         }
 
         return false;
+    }
+
+    private static function normalizeNumbers(string $text): string
+    {
+        // Drop thousands separators (comma, space, thin/no-break space) between digit groups.
+        return preg_replace('/(?<=\d)[,\x{00A0}\x{202F} ](?=\d{3}(?!\d))/u', '', $text) ?? $text;
     }
 }
