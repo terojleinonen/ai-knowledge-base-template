@@ -89,3 +89,18 @@ it('shows validation errors from the API', async () => {
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Too many requests')
 })
+
+it('shows daily limit messages from the server as-is', async () => {
+  mockApi((url) => {
+    if (url.endsWith('/documents?per_page=100')) return { body: { data: [] } }
+    if (url.endsWith('/chat/stream')) {
+      return { status: 429, body: { message: "You've reached today's limit of 15 questions. Please come back tomorrow." } }
+    }
+    return undefined
+  })
+
+  renderChat()
+  await userEvent.type(screen.getByLabelText('Your question'), 'Hello there{Enter}')
+
+  expect(await screen.findByRole('alert')).toHaveTextContent("You've reached today's limit of 15 questions.")
+})

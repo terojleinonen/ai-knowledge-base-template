@@ -3,6 +3,7 @@
 # Production image: FrankenPHP (Caddy + PHP) serving the Laravel API.
 # The same image runs the queue worker: override the command with
 #   php artisan queue:work --tries=3 --timeout=900
+# or set RUN_WORKER_IN_WEB=true to run it inside the web container (free tiers).
 
 FROM composer:2 AS vendor
 WORKDIR /app
@@ -29,7 +30,7 @@ RUN php artisan package:discover --ansi \
 USER www-data
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s CMD php -r "exit(@file_get_contents('http://localhost:8080/up') === false ? 1 : 0);"
+HEALTHCHECK --interval=30s --timeout=5s CMD php -r "exit(@file_get_contents('http://localhost:'.(getenv('PORT') ?: 8080).'/up') === false ? 1 : 0);"
 
-# Cache config/routes at start so runtime environment variables are respected.
-CMD ["sh", "-c", "php artisan optimize && php artisan migrate --force && frankenphp php-server --root public --listen :8080"]
+# Config/routes are cached at start (docker/start.sh) so runtime environment variables are respected.
+CMD ["sh", "docker/start.sh"]

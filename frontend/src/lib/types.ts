@@ -4,7 +4,18 @@ export interface User {
   id: number
   name: string
   email: string
+  is_guest: boolean
   created_at: string
+}
+
+export interface AppConfig {
+  demo: boolean
+  registration: boolean
+  limits: {
+    questions_per_user_per_day: number | null
+    questions_per_day: number | null
+    documents_per_user: number | null
+  }
 }
 
 export interface KbDocument {

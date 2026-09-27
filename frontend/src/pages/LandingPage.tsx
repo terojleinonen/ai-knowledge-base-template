@@ -1,6 +1,8 @@
 import { Link } from 'react-router'
 import { useAuth } from '../auth/useAuth'
+import { DemoButton } from '../components/DemoButton'
 import { Logo } from '../components/ui'
+import { useAppConfig } from '../hooks/config'
 
 const features = [
   { title: 'Bring your documents', body: 'Upload PDF, Word, Markdown and text files. They are parsed, chunked and indexed in the background.' },
@@ -10,6 +12,9 @@ const features = [
 
 export function LandingPage() {
   const { user } = useAuth()
+  const config = useAppConfig()
+  const registration = config.data?.registration ?? true
+  const demo = config.data?.demo ?? false
 
   return (
     <div className="min-h-full bg-white">
@@ -25,9 +30,11 @@ export function LandingPage() {
               <Link to="/login" className="rounded-lg px-3.5 py-2 text-slate-700 hover:bg-slate-100">
                 Sign in
               </Link>
-              <Link to="/register" className="rounded-lg bg-indigo-600 px-3.5 py-2 text-white hover:bg-indigo-500">
-                Get started
-              </Link>
+              {registration && (
+                <Link to="/register" className="rounded-lg bg-indigo-600 px-3.5 py-2 text-white hover:bg-indigo-500">
+                  Get started
+                </Link>
+              )}
             </>
           )}
         </nav>
@@ -42,10 +49,23 @@ export function LandingPage() {
             Turn handbooks, specs and research into a searchable knowledge base that answers questions in plain
             language — with sources you can check.
           </p>
-          <div className="mt-10 flex justify-center gap-3">
-            <Link to={user ? '/app' : '/register'} className="rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
-              {user ? 'Open your knowledge base' : 'Create a free account'}
-            </Link>
+          <div className="mt-10 flex flex-col items-center gap-3">
+            {user ? (
+              <Link to="/app" className="rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                Open your knowledge base
+              </Link>
+            ) : demo ? (
+              <>
+                <DemoButton className="max-w-md" />
+                <p className="text-sm text-slate-500">No sign-up needed. You get a private copy of sample documents for 24 hours.</p>
+              </>
+            ) : (
+              registration && (
+                <Link to="/register" className="rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                  Create a free account
+                </Link>
+              )
+            )}
           </div>
         </section>
 

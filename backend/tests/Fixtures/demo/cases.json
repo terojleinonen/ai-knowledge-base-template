@@ -1,0 +1,5 @@
+{
+  "name": "Demo fixture",
+  "documents": ["vacation.txt", "security.txt"],
+  "cases": [{"question": "unused", "unanswerable": true}]
+}

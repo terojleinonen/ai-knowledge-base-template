@@ -12,4 +12,3 @@ database/*.sqlite
 tests
 .phpunit.cache
 bootstrap/cache/*.php
-evals

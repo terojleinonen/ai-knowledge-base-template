@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth'
+import { DemoButton } from '../components/DemoButton'
 import { Alert, Button, Field, Logo, Spinner } from '../components/ui'
+import { useAppConfig } from '../hooks/config'
 import { ApiError } from '../lib/api'
 
 export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
@@ -11,6 +13,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [error, setError] = useState<ApiError | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const isRegister = mode === 'register'
+  const config = useAppConfig()
+  const registration = config.data?.registration ?? true
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -68,12 +72,21 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         </form>
       </div>
 
-      <p className="mt-6 text-sm text-slate-600">
-        {isRegister ? 'Already have an account? ' : 'New here? '}
-        <Link to={isRegister ? '/login' : '/register'} className="font-semibold text-indigo-600 hover:text-indigo-500">
-          {isRegister ? 'Sign in' : 'Create an account'}
-        </Link>
-      </p>
+      {(isRegister || registration) && (
+        <p className="mt-6 text-sm text-slate-600">
+          {isRegister ? 'Already have an account? ' : 'New here? '}
+          <Link to={isRegister ? '/login' : '/register'} className="font-semibold text-indigo-600 hover:text-indigo-500">
+            {isRegister ? 'Sign in' : 'Create an account'}
+          </Link>
+        </p>
+      )}
+
+      {config.data?.demo && (
+        <div className="mt-6 flex flex-col items-center">
+          <p className="mb-3 text-sm text-slate-600">Just looking around?</p>
+          <DemoButton className="text-center" />
+        </div>
+      )}
     </div>
   )
 }

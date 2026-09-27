@@ -47,7 +47,12 @@ class Document extends Model
     protected static function booted(): void
     {
         static::deleted(function (Document $document): void {
-            Storage::disk($document->disk)->delete($document->path);
+            // Demo guests share the template's stored files; only delete a file nobody else uses.
+            $shared = static::where('disk', $document->disk)->where('path', $document->path)->exists();
+
+            if (! $shared) {
+                Storage::disk($document->disk)->delete($document->path);
+            }
         });
     }
 

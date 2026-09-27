@@ -99,5 +99,33 @@ jobs:
         with:
           context: backend
           push: false
+          load: true
+          tags: kb-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke test the container
+        run: |
+          docker run -d --name kb -p 8080:10000 \
+            -e PORT=10000 \
+            -e APP_KEY="base64:$(openssl rand -base64 32)" \
+            -e DB_CONNECTION=sqlite -e DB_DATABASE=/tmp/kb.sqlite \
+            -e CACHE_STORE=database -e QUEUE_CONNECTION=database \
+            -e RUN_WORKER_IN_WEB=true -e KB_REGISTRATION_ENABLED=false \
+            --entrypoint sh kb-api:ci -c 'touch /tmp/kb.sqlite && exec sh docker/start.sh'
+
+          for i in $(seq 1 30); do curl -fsS http://localhost:8080/up >/dev/null && break; sleep 2; done
+
+          curl -fsS http://localhost:8080/up
+          curl -fsS http://localhost:8080/api/config | tee /dev/stderr | grep -q '"registration":false'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' http://localhost:8080/api/documents)" = 401
+
+          # The background queue worker and scheduler are running.
+          # (No `ps` in the slim image, so read process command lines from /proc.)
+          procs="$(docker exec kb sh -c 'for f in /proc/[0-9]*/cmdline; do tr "\\0" " " < "$f"; echo; done 2>/dev/null')"
+          echo "$procs" | grep -q 'queue:work'
+          echo "$procs" | grep -q 'schedule:work'
+
+      - name: Container logs
+        if: always()
+        run: docker logs kb 2>&1 | tail -50 || true

@@ -8,6 +8,7 @@ use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Resources\DocumentResource;
 use App\Jobs\ProcessDocument;
 use App\Models\Document;
+use App\Services\UsageLimits;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -32,9 +33,16 @@ class DocumentController extends Controller
         return DocumentResource::collection($documents);
     }
 
-    public function store(StoreDocumentRequest $request): DocumentResource
+    public function store(StoreDocumentRequest $request, UsageLimits $limits): DocumentResource
     {
         $user = $request->user();
+
+        if (! $limits->canAddDocument($user)) {
+            throw ValidationException::withMessages([
+                'file' => 'You have reached the limit of '.config('knowledge.limits.documents_per_user').' documents. Delete one to upload another.',
+            ]);
+        }
+
         $file = $request->file('file');
         $checksum = hash_file('sha256', $file->getRealPath());
 
