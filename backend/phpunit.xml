@@ -41,6 +41,7 @@
         <env name="KB_RETRIEVAL_TOP_K" value="6" force="true"/>
         <env name="KB_RETRIEVAL_MIN_SCORE" value="0.2" force="true"/>
         <env name="KB_HISTORY_MESSAGES" value="6" force="true"/>
+        <env name="KB_CITATION_REPAIR" value="true" force="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

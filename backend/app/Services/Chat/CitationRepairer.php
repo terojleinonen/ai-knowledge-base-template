@@ -27,7 +27,8 @@ class CitationRepairer
     private const MARKER = '/\[(\d+(?:\s*,\s*\d+)*)\]/';
 
     /** "Not in the sources" statements: a negation near a reference to the sources themselves. */
-    private const NOT_FOUND = '/\b(?:not|no|never|cannot|n\'t)\b.{0,60}\b(?:sources?|documents?|context|provided (?:text|information))\b|\b(?:sources?|documents?|context)\b.{0,40}\b(?:not|no|n\'t)\b|\bno (?:information|mention|details)\b|\b(?:could|can)(?:\'t| ?not) find\b/i';
+    // Citation markers count as "the sources" only as a sentence subject: "[1] and [3] do not contain...".
+    private const NOT_FOUND = '/\b(?:not|no|never|cannot|n\'t)\b.{0,60}\b(?:sources?|documents?|context|provided (?:text|information))\b|\b(?:sources?|documents?|context)\b.{0,40}\b(?:not|no|n\'t)\b|(?:^|[.!?]\s+)(?:\[\d+\]\s*(?:,|and|&)?\s*)+[^.!?]{0,40}\b(?:not|no|n\'t)\b|\bno (?:information|mention|details)\b|\b(?:could|can)(?:\'t| ?not) find\b/i';
 
     private const STOPWORDS = [
         'the', 'and', 'for', 'are', 'was', 'were', 'with', 'that', 'this', 'these', 'those', 'from', 'into', 'your',
@@ -63,6 +64,14 @@ class CitationRepairer
         return implode("\n", $lines);
     }
 
+    /**
+     * Whether the text says the sources don't contain the answer.
+     */
+    public static function isNotFoundStatement(string $text): bool
+    {
+        return preg_match(self::NOT_FOUND, $text) === 1;
+    }
+
     private function repairSentence(string $sentence): string
     {
         // Keep list markers ("- ", "1. ") out of the analysis.
@@ -77,7 +86,7 @@ class CitationRepairer
             return $prefix.$text;
         }
 
-        if (preg_match(self::NOT_FOUND, $text) === 1) {
+        if (self::isNotFoundStatement($text)) {
             return $prefix.$text;
         }
 

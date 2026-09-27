@@ -163,10 +163,9 @@ class AnswerQuestion
 
             $message = $conversation->messages()->create([
                 'role' => MessageRole::Assistant,
-                'content' => $this->citations->repair(
-                    trim($answer),
-                    array_map(fn (SearchResult $r) => $r->content, $results),
-                ),
+                'content' => config('knowledge.citations.repair')
+                    ? $this->citations->repair(trim($answer), array_map(fn (SearchResult $r) => $r->content, $results))
+                    : trim($answer),
                 'sources' => $this->sources($results),
             ]);
 

@@ -1,0 +1,72 @@
+{
+  "name": "Northwind sample",
+  "documents": ["employee-handbook.md", "security-policy.docx", "aurora-product-spec.pdf"],
+  "cases": [
+    {
+      "question": "How many vacation days do employees get per year, and how many can be carried over?",
+      "expect_documents": ["employee-handbook"],
+      "facts": ["30", "10"]
+    },
+    {
+      "question": "How many days per week can I work remotely?",
+      "expect_documents": ["employee-handbook"],
+      "facts": [["four", "4"]]
+    },
+    {
+      "question": "How long can I work abroad each year?",
+      "expect_documents": ["employee-handbook"],
+      "facts": ["30"]
+    },
+    {
+      "question": "When do I need a doctor's certificate for sick leave?",
+      "expect_documents": ["employee-handbook"],
+      "facts": [["fourth day", "4th day", "more than three", "after three", "three consecutive days"]]
+    },
+    {
+      "question": "What is the annual learning budget?",
+      "expect_documents": ["employee-handbook"],
+      "facts": [["1,500", "1500", "1 500"]]
+    },
+    {
+      "question": "Which password manager must we use and how long must passwords be?",
+      "expect_documents": ["security-policy"],
+      "facts": ["1Password", "16"]
+    },
+    {
+      "question": "Where do I report a phishing email?",
+      "expect_documents": ["security-policy"],
+      "facts": [["security@northwind.example", "#security"]]
+    },
+    {
+      "question": "How long does the Aurora node battery last?",
+      "expect_documents": ["aurora-product-spec"],
+      "facts": [["5 years", "five years"]]
+    },
+    {
+      "question": "What is the CO2 measurement range of the Aurora sensor?",
+      "expect_documents": ["aurora-product-spec"],
+      "facts": ["400", "5000"]
+    },
+    {
+      "question": "If I lose my laptop, who do I tell and how quickly, and must it be encrypted?",
+      "expect_documents": ["employee-handbook", "security-policy"],
+      "facts": [["24 hours"], ["encryption", "encrypted"]]
+    },
+    {
+      "question": "What is the capital of France?",
+      "unanswerable": true
+    },
+    {
+      "question": "Give me a recipe for banana bread.",
+      "unanswerable": true
+    },
+    {
+      "question": "What is the company policy on parking at the office?",
+      "unanswerable": true
+    },
+    {
+      "question": "How much does the Aurora Pro enterprise support contract cost?",
+      "unanswerable": true
+    }
+  ]
+}

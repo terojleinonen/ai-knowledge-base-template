@@ -1,0 +1,1 @@
+Password policy: the approved password manager is 1Password. Passwords need sixteen characters minimum.

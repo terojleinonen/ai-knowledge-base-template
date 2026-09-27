@@ -131,6 +131,38 @@ cd ../frontend
 npm test && npm run lint && npm run typecheck && npm run build
 ```
 
+## Evaluating quality
+
+`php artisan kb:eval` runs a dataset of questions with known answers through the real pipeline, using your configured models, and reports:
+
+- **Retrieval:** Hit@1, Hit@k, MRR, and how many unanswerable questions retrieval already filters out
+- **Answers:** fact recall, citation precision (did it cite the right document?), uncited answers, correct and false abstentions
+- **Latency:** p50 and max
+
+```bash
+cd backend
+php artisan kb:eval --retrieval-only          # seconds; no chat model calls
+php artisan kb:eval                           # full run with answers
+php artisan kb:eval --no-repair               # measure the raw model's citations
+php artisan kb:eval --json=results.json       # save results to compare runs
+php artisan kb:eval path/to/dataset --limit=5
+```
+
+Each run ingests the dataset's documents under a throwaway user and deletes it, including stored files, afterwards. It uses your configured database, not a test database. A sample dataset is in `backend/evals/northwind/`. To build your own, add documents and a `cases.json`:
+
+```json
+{
+  "name": "My docs",
+  "documents": ["handbook.pdf", "faq.md"],
+  "cases": [
+    { "question": "How many vacation days?", "expect_documents": ["handbook"], "facts": ["30", ["10", "ten"]] },
+    { "question": "What is the capital of France?", "unanswerable": true }
+  ]
+}
+```
+
+`expect_documents` uses file names without extensions. Each entry in `facts` must appear in the answer; an inner list means any of those alternatives counts. Use it after changing models, prompts, chunking or `KB_RETRIEVAL_MIN_SCORE`.
+
 ## API
 
 All routes are prefixed with `/api`. Authenticated routes need `Authorization: Bearer <token>`.
