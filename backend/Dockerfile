@@ -32,5 +32,5 @@ EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s CMD php -r "exit(@file_get_contents('http://localhost:'.(getenv('PORT') ?: 8080).'/up') === false ? 1 : 0);"
 
-# Config/routes are cached at start (docker/start.sh) so runtime environment variables are respected.
+# Config, routes and events are cached at start (docker/start.sh) so runtime environment variables are respected.
 CMD ["sh", "docker/start.sh"]

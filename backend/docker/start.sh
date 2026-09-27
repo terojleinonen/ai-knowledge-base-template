@@ -2,7 +2,10 @@
 # Container entrypoint: prepare the app, optionally run background processes, then serve.
 set -e
 
-php artisan optimize
+# Not `optimize`: that also caches Blade views, and this API-only app has none.
+php artisan config:cache
+php artisan route:cache
+php artisan event:cache
 php artisan migrate --force
 
 if [ "${KB_DEMO_ENABLED:-false}" = "true" ]; then
