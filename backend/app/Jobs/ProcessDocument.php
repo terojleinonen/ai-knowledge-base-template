@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\DocumentStatus;
 use App\Models\Document;
+use App\Services\Chat\AnswerQuestion;
 use App\Services\Documents\DocumentProcessingException;
 use App\Services\Documents\TextChunker;
 use App\Services\Documents\TextExtractor;
@@ -77,9 +78,11 @@ class ProcessDocument implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
-        $message = $exception instanceof DocumentProcessingException
-            ? $exception->getMessage()
-            : 'Processing failed. Please try again later.';
+        $message = match (true) {
+            $exception instanceof DocumentProcessingException => $exception->getMessage(),
+            $exception !== null && AnswerQuestion::isUsageLimit($exception) => AnswerQuestion::USAGE_LIMIT_MESSAGE,
+            default => 'Processing failed. Please try again later.',
+        };
 
         if (! $exception instanceof DocumentProcessingException) {
             Log::error('Document processing failed', [

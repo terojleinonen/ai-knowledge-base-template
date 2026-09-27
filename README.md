@@ -56,7 +56,9 @@ Open http://localhost:5173 and create an account.
 
 ### Choosing an AI provider
 
-**Option A: OpenAI (fast, costs a few cents).** Set `OPENAI_API_KEY` in `backend/.env`. The defaults use `gpt-4o-mini` and `text-embedding-3-small`.
+**Option A: OpenAI (fast, cheapest).** Set `OPENAI_API_KEY` in `backend/.env`. The defaults use `gpt-6-luna` ($0.10 / $0.50 per million input/output tokens) and `text-embedding-3-small`.
+
+> **Accounts without credit:** in testing (September 2026), an OpenAI account with no credit could still call `gpt-6-luna`, limited to **50 requests per day** and about 100,000 tokens per ~11 days. **Embeddings were refused** (`insufficient_quota`). Without credit, combine Luna for chat with local Ollama embeddings. Keep `KB_LIMIT_QUESTIONS_PER_DAY` below 50. When the provider's quota runs out, the app shows "The AI service has reached its usage limit for now" instead of an error. These limits are account- and promotion-specific; check the response headers or your OpenAI dashboard.
 
 **Option B: fully local with Ollama (free and private, slower).**
 
@@ -111,7 +113,7 @@ All settings are in `backend/config/knowledge.php` and can be overridden via env
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `KB_CHAT_PROVIDER` / `KB_CHAT_MODEL` | `openai` / `gpt-4o-mini` | Answer generation |
+| `KB_CHAT_PROVIDER` / `KB_CHAT_MODEL` | `openai` / `gpt-6-luna` | Answer generation |
 | `KB_EMBEDDINGS_PROVIDER` / `KB_EMBEDDINGS_MODEL` | `openai` / `text-embedding-3-small` | Vector embeddings |
 | `KB_CHUNK_SIZE` / `KB_CHUNK_OVERLAP` | `1200` / `200` | Chunking (characters) |
 | `KB_RETRIEVAL_TOP_K` / `KB_RETRIEVAL_MIN_SCORE` | `6` / `0.2` | Retrieval |
@@ -192,7 +194,7 @@ Rate limits: auth 10/min per IP, uploads 30/min, chat 20/min per user.
 | Database | [Neon](https://neon.com) Postgres | 0.5 GB, scales to zero, doesn't expire |
 | Frontend | [Cloudflare Pages](https://pages.cloudflare.com) | Unlimited static traffic |
 
-The **AI APIs are the only cost.** Both providers need prepaid credit. Set a monthly spend limit in each console. The app also caps usage (below).
+The **AI APIs are the only cost.** The blueprint uses OpenAI for both chat (`gpt-6-luna`) and embeddings. Hosted embeddings need OpenAI credit, since Ollama can't run on the free tier, but indexing the whole demo costs a fraction of a cent. Adding credit also lifts the 50 requests/day limit. Set a monthly spend limit in the OpenAI dashboard. The app also caps usage (below).
 
 **1. Database: Neon**
 
@@ -208,7 +210,7 @@ New → *Blueprint* → select this repository. `render.yaml` configures the ser
 | `APP_URL` | `https://<service>.onrender.com` |
 | `DB_URL` | Neon connection string |
 | `CORS_ALLOWED_ORIGINS` | your Cloudflare Pages URL (step 3) |
-| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` | API keys |
+| `OPENAI_API_KEY` | API key (plus `ANTHROPIC_API_KEY` if you switch chat to Claude) |
 
 On start, the container runs migrations, embeds the demo documents once, and runs the queue worker and scheduler in the background (`RUN_WORKER_IN_WEB=true`), since the free tier has no separate worker service.
 
@@ -222,7 +224,7 @@ Connect the repository. Use root directory `frontend`, build command `npm run bu
 
 - **"Try the live demo"** creates a guest account with a private copy of the sample documents from `evals/northwind`. Copies are database rows only, with no re-embedding, so a guest costs nothing until they ask questions. Guests are deleted after 24 hours (`kb:demo:prune`, hourly).
 - **Registration is off** (`KB_REGISTRATION_ENABLED=false`).
-- **Daily caps** bound spend: `KB_LIMIT_QUESTIONS_PER_USER` (15), `KB_LIMIT_QUESTIONS_PER_DAY` (150, all users), `KB_LIMIT_DOCUMENTS_PER_USER` (6), and uploads up to 2 MB.
+- **Daily caps** bound spend: `KB_LIMIT_QUESTIONS_PER_USER` (15), `KB_LIMIT_QUESTIONS_PER_DAY` (45, all users, below OpenAI's no-credit limit), `KB_LIMIT_DOCUMENTS_PER_USER` (6), and uploads up to 2 MB.
 
 On free hosting, uploaded files are lost when the container restarts. Their extracted text and embeddings are in the database, so search and chat keep working; only "Retry" on those documents fails.
 

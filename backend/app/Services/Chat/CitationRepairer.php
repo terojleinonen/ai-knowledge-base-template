@@ -28,7 +28,13 @@ class CitationRepairer
 
     /** "Not in the sources" statements: a negation near a reference to the sources themselves. */
     // Citation markers count as "the sources" only as a sentence subject: "[1] and [3] do not contain...".
-    private const NOT_FOUND = '/\b(?:not|no|never|cannot|n\'t)\b.{0,60}\b(?:sources?|documents?|context|provided (?:text|information))\b|\b(?:sources?|documents?|context)\b.{0,40}\b(?:not|no|n\'t)\b|(?:^|[.!?]\s+)(?:\[\d+\]\s*(?:,|and|&)?\s*)+[^.!?]{0,40}\b(?:not|no|n\'t)\b|\bno (?:information|mention|details)\b|\b(?:could|can)(?:\'t| ?not) find\b/i';
+    private const NOT_FOUND = '/'
+        .'(?:\b(?:not|no|never|cannot)|n[\'’]t)\b.{0,60}\b(?:sources?|documents?|context|provided (?:text|information))\b'
+        .'|\b(?:sources?|documents?|context)\b.{0,40}(?:\b(?:not|no)|n[\'’]t)\b'
+        .'|(?:^|[.!?]\s+)(?:\[\d+\]\s*(?:,|and|&)?\s*)+[^.!?]{0,40}(?:\b(?:not|no)|n[\'’]t)\b'
+        .'|\bno (?:information|mention|details)\b'
+        .'|\b(?:could|can)(?:n?[\'’]t| ?not) find\b'
+        .'/iu';
 
     private const STOPWORDS = [
         'the', 'and', 'for', 'are', 'was', 'were', 'with', 'that', 'this', 'these', 'those', 'from', 'into', 'your',

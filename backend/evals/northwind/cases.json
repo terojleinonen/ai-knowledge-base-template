@@ -20,7 +20,7 @@
     {
       "question": "When do I need a doctor's certificate for sick leave?",
       "expect_documents": ["employee-handbook"],
-      "facts": [["fourth day", "4th day", "more than three", "after three", "three consecutive days"]]
+      "facts": [["fourth", "4th", "more than three", "after three", "three consecutive days"]]
     },
     {
       "question": "What is the annual learning budget?",

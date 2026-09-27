@@ -14,7 +14,7 @@ return [
 
     'chat' => [
         'provider' => env('KB_CHAT_PROVIDER', 'openai'),
-        'model' => env('KB_CHAT_MODEL', 'gpt-4o-mini'),
+        'model' => env('KB_CHAT_MODEL', 'gpt-6-luna'),
         'timeout' => (int) env('KB_CHAT_TIMEOUT', 120),
     ],
 

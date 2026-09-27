@@ -79,6 +79,28 @@ it('fails answerable cases that cite nothing', function () {
     unlink($json);
 });
 
+it('matches facts regardless of thousands separators', function () {
+    $dir = sys_get_temp_dir().'/kb-eval-numbers-'.uniqid();
+    mkdir($dir);
+    file_put_contents("{$dir}/spec.txt", 'Sensor specification: the sensor measures carbon dioxide from 400 to 5000 ppm.');
+    file_put_contents("{$dir}/cases.json", json_encode([
+        'documents' => ['spec.txt'],
+        'cases' => [['question' => 'What does the sensor measure for carbon dioxide?', 'expect_documents' => ['spec'], 'facts' => ['5000', '1 500 000', '30']]],
+    ]));
+    KnowledgeBaseAssistant::fake(['The sensor measures carbon dioxide from 400 to 5,000 ppm and stores 1,500,000 readings, not 300 [1].']);
+    $json = tempnam(sys_get_temp_dir(), 'eval');
+
+    $this->artisan('kb:eval', ['dataset' => $dir, '--json' => $json])->assertSuccessful();
+
+    $case = json_decode(file_get_contents($json), true)['cases'][0];
+
+    // "5,000" matches 5000 and "1,500,000" matches "1 500 000"; "300" must still not match "30".
+    expect($case['facts_found'])->toBe(2)->and($case['missing_facts'])->toBe(['30']);
+
+    array_map('unlink', [...glob("{$dir}/*"), $json]);
+    rmdir($dir);
+});
+
 it('skips the chat model with --retrieval-only', function () {
     KnowledgeBaseAssistant::fake();
 

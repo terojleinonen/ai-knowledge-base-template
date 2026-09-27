@@ -15,6 +15,8 @@ use Generator;
 use Illuminate\Http\StreamedEvent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
+use Laravel\Ai\Exceptions\RateLimitedException;
 use Laravel\Ai\Messages\AssistantMessage;
 use Laravel\Ai\Messages\UserMessage;
 use Laravel\Ai\Streaming\Events\TextDelta;
@@ -22,6 +24,8 @@ use Throwable;
 
 class AnswerQuestion
 {
+    public const USAGE_LIMIT_MESSAGE = 'The AI service has reached its usage limit for now. Please try again later.';
+
     public const NO_CONTEXT_ANSWER = "I couldn't find anything relevant to that in your documents. Try rephrasing the question or uploading a document that covers it.";
 
     public function __construct(
@@ -69,7 +73,9 @@ class AnswerQuestion
         } catch (Throwable $e) {
             report($e);
 
-            yield new StreamedEvent('error', ['message' => 'Your documents could not be searched right now. Please try again.']);
+            yield new StreamedEvent('error', ['message' => self::isUsageLimit($e)
+                ? self::USAGE_LIMIT_MESSAGE
+                : 'Your documents could not be searched right now. Please try again.']);
 
             return;
         }
@@ -95,7 +101,9 @@ class AnswerQuestion
                 report($e);
                 $failed = true;
 
-                yield new StreamedEvent('error', ['message' => 'The AI provider failed to answer. Please try again.']);
+                yield new StreamedEvent('error', ['message' => self::isUsageLimit($e)
+                    ? self::USAGE_LIMIT_MESSAGE
+                    : 'The AI provider failed to answer. Please try again.']);
 
                 return;
             }
@@ -109,6 +117,14 @@ class AnswerQuestion
                 $this->persist($user, $conversation, $question, $answer, $results);
             }
         }
+    }
+
+    /**
+     * Provider-side quota problems (rate limits, exhausted credit), as opposed to failures.
+     */
+    public static function isUsageLimit(Throwable $e): bool
+    {
+        return $e instanceof RateLimitedException || $e instanceof InsufficientCreditsException;
     }
 
     /**
