@@ -7,6 +7,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\Demo\DemoAccounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -17,6 +18,7 @@ class AuthController extends Controller
 {
     public function register(RegisterRequest $request): JsonResponse
     {
+
         $user = User::create($request->safe()->only(['name', 'email', 'password']));
 
         return $this->tokenResponse($user, $request->input('device_name', 'web'), 201);
@@ -33,6 +35,13 @@ class AuthController extends Controller
         }
 
         return $this->tokenResponse($user, $request->input('device_name', 'web'));
+    }
+
+    public function guest(Request $request, DemoAccounts $demo): JsonResponse
+    {
+        abort_unless(config('knowledge.demo.enabled'), 404);
+
+        return $this->tokenResponse($demo->createGuest(), 'demo', 201);
     }
 
     public function logout(Request $request): Response

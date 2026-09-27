@@ -27,7 +27,8 @@ it('signs in and stores the token', async () => {
 
   expect(await screen.findByText('Dashboard')).toBeInTheDocument()
   expect(tokenStore.get()).toBe('abc')
-  expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string)).toEqual({ email: 'ada@example.com', password: 'secret-password' })
+  const [, init] = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/auth/login'))!
+  expect(JSON.parse(init!.body as string)).toEqual({ email: 'ada@example.com', password: 'secret-password' })
 })
 
 it('shows validation errors next to fields', async () => {

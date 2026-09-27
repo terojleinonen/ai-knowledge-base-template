@@ -62,6 +62,33 @@ return [
         'repair' => (bool) env('KB_CITATION_REPAIR', true),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Public demo & cost controls
+    |--------------------------------------------------------------------------
+    |
+    | For a public deployment where every question costs API credit. Null
+    | limits mean unlimited. Guest accounts get a private copy of the demo
+    | documents and are deleted after `guest_ttl_hours`.
+    |
+    */
+
+    'demo' => [
+        'enabled' => (bool) env('KB_DEMO_ENABLED', false),
+        'dataset' => env('KB_DEMO_DATASET', 'evals/northwind'),
+        'guest_ttl_hours' => (int) env('KB_DEMO_GUEST_TTL_HOURS', 24),
+    ],
+
+    'registration' => [
+        'enabled' => (bool) env('KB_REGISTRATION_ENABLED', true),
+    ],
+
+    'limits' => [
+        'questions_per_user_per_day' => filled(env('KB_LIMIT_QUESTIONS_PER_USER')) ? (int) env('KB_LIMIT_QUESTIONS_PER_USER') : null,
+        'questions_per_day' => filled(env('KB_LIMIT_QUESTIONS_PER_DAY')) ? (int) env('KB_LIMIT_QUESTIONS_PER_DAY') : null,
+        'documents_per_user' => filled(env('KB_LIMIT_DOCUMENTS_PER_USER')) ? (int) env('KB_LIMIT_DOCUMENTS_PER_USER') : null,
+    ],
+
     'history' => [
         // Number of previous messages sent to the model as conversation context.
         'messages' => (int) env('KB_HISTORY_MESSAGES', 6),

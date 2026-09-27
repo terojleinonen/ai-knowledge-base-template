@@ -13,6 +13,7 @@ it('registers a user and returns a token', function () {
 
     $response->assertCreated()
         ->assertJsonPath('user.email', 'ada@example.com')
+        ->assertJsonPath('user.is_guest', false)
         ->assertJsonStructure(['token']);
 
     $this->withToken($response->json('token'))

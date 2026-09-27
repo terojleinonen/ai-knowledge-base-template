@@ -169,7 +169,9 @@ All routes are prefixed with `/api`. Authenticated routes need `Authorization: B
 
 | Method | Route | Description |
 |---|---|---|
+| GET | `/config` | Public settings: `{ demo, registration, limits }` |
 | POST | `/auth/register`, `/auth/login` | Returns `{ token, user }` |
+| POST | `/auth/guest` | Demo mode only: creates a guest account with the sample documents |
 | GET / POST | `/auth/me`, `/auth/logout` | Current user / revoke token |
 | GET / POST | `/documents` | List (filter `?status=`) / upload (`multipart: file`) |
 | GET / DELETE | `/documents/{id}` | Show / delete (removes file and chunks) |
@@ -182,18 +184,53 @@ Rate limits: auth 10/min per IP, uploads 30/min, chat 20/min per user.
 
 ## Deployment
 
-The backend ships with a production `Dockerfile` (FrankenPHP). Run the same image twice:
+### Free-tier setup ($0 hosting)
 
-- **web:** default command. It caches config, runs migrations and serves on `:8080`.
-- **worker:** `php artisan queue:work --tries=3 --timeout=900`
+| Piece | Service | Free tier |
+|---|---|---|
+| API (Docker) | [Render](https://render.com) web service | Sleeps after 15 min idle (~1 min to wake), ephemeral disk |
+| Database | [Neon](https://neon.com) Postgres | 0.5 GB, scales to zero, doesn't expire |
+| Frontend | [Cloudflare Pages](https://pages.cloudflare.com) | Unlimited static traffic |
+
+The **AI APIs are the only cost.** Both providers need prepaid credit. Set a monthly spend limit in each console. The app also caps usage (below).
+
+**1. Database: Neon**
+
+Create a project and copy its connection string (`postgresql://…?sslmode=require`).
+
+**2. API: Render**
+
+New → *Blueprint* → select this repository. `render.yaml` configures the service. Fill in the secrets it asks for:
+
+| Variable | Value |
+|---|---|
+| `APP_KEY` | output of `php artisan key:generate --show` |
+| `APP_URL` | `https://<service>.onrender.com` |
+| `DB_URL` | Neon connection string |
+| `CORS_ALLOWED_ORIGINS` | your Cloudflare Pages URL (step 3) |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` | API keys |
+
+On start, the container runs migrations, embeds the demo documents once, and runs the queue worker and scheduler in the background (`RUN_WORKER_IN_WEB=true`), since the free tier has no separate worker service.
+
+**3. Frontend: Cloudflare Pages**
+
+Connect the repository. Use root directory `frontend`, build command `npm run build`, output directory `dist`, and environment variable `VITE_API_BASE_URL=https://<service>.onrender.com/api`. `public/_redirects` handles SPA routing.
+
+### Public demo mode
+
+`render.yaml` deploys a public portfolio demo:
+
+- **"Try the live demo"** creates a guest account with a private copy of the sample documents from `evals/northwind`. Copies are database rows only, with no re-embedding, so a guest costs nothing until they ask questions. Guests are deleted after 24 hours (`kb:demo:prune`, hourly).
+- **Registration is off** (`KB_REGISTRATION_ENABLED=false`).
+- **Daily caps** bound spend: `KB_LIMIT_QUESTIONS_PER_USER` (15), `KB_LIMIT_QUESTIONS_PER_DAY` (150, all users), `KB_LIMIT_DOCUMENTS_PER_USER` (6), and uploads up to 2 MB.
+
+On free hosting, uploaded files are lost when the container restarts. Their extracted text and embeddings are in the database, so search and chat keep working; only "Retry" on those documents fails.
+
+### Other hosts
+
+The image runs anywhere Docker does. Run the same image as a web service and, on paid plans, as a separate worker (`php artisan queue:work --tries=3 --timeout=900`) plus `php artisan schedule:work`. Use S3-compatible storage (`KB_UPLOAD_DISK`) if you run more than one instance.
 
 Streaming answers need a server that doesn't buffer responses. FrankenPHP streams out of the box. Behind nginx, the API already sends `X-Accel-Buffering: no`. Keep proxy read timeouts above `KB_CHAT_TIMEOUT`.
-
-Also run `php artisan schedule:work` (or cron `schedule:run`) for token/failed-job pruning.
-
-Recommended production settings are PostgreSQL (`DB_CONNECTION=pgsql`), `APP_ENV=production`, `APP_DEBUG=false`, and an S3-compatible `KB_UPLOAD_DISK` if you run multiple instances. Use Redis for the queue and cache at scale.
-
-The frontend is a static build (`npm run build` → `dist/`) for any static host (Netlify, Vercel, Cloudflare Pages, S3). Set `VITE_API_BASE_URL` at build time and add the frontend origin to `CORS_ALLOWED_ORIGINS`. Configure SPA fallback to `index.html`.
 
 ## Roadmap
 

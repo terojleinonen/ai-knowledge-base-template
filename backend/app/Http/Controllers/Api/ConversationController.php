@@ -8,6 +8,7 @@ use App\Http\Resources\ConversationResource;
 use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
 use App\Services\Chat\AnswerQuestion;
+use App\Services\UsageLimits;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -35,8 +36,10 @@ class ConversationController extends Controller
         return response()->noContent();
     }
 
-    public function ask(AskQuestionRequest $request, AnswerQuestion $answer): JsonResponse
+    public function ask(AskQuestionRequest $request, AnswerQuestion $answer, UsageLimits $limits): JsonResponse
     {
+        $limits->consumeQuestion($request->user());
+
         $conversation = $request->filled('conversation_id')
             ? $this->find($request, $request->integer('conversation_id'))
             : null;
@@ -51,8 +54,10 @@ class ConversationController extends Controller
         return (new MessageResource($message))->response()->setStatusCode(201);
     }
 
-    public function stream(AskQuestionRequest $request, AnswerQuestion $answer): StreamedResponse
+    public function stream(AskQuestionRequest $request, AnswerQuestion $answer, UsageLimits $limits): StreamedResponse
     {
+        $limits->consumeQuestion($request->user());
+
         $conversation = $request->filled('conversation_id')
             ? $this->find($request, $request->integer('conversation_id'))
             : null;

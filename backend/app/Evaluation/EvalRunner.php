@@ -2,18 +2,15 @@
 
 namespace App\Evaluation;
 
-use App\Enums\DocumentStatus;
-use App\Jobs\ProcessDocument;
 use App\Models\User;
 use App\Services\Chat\AnswerQuestion;
 use App\Services\Chat\CitationRepairer;
+use App\Services\Documents\DocumentIngestor;
 use App\Services\Retrieval\Embedder;
 use App\Services\Retrieval\SearchResult;
 use App\Services\Retrieval\VectorStore;
 use Closure;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 /**
  * Runs a dataset against the real ingestion, retrieval and answering pipeline
@@ -27,6 +24,7 @@ class EvalRunner
         private readonly Embedder $embedder,
         private readonly VectorStore $store,
         private readonly AnswerQuestion $answerQuestion,
+        private readonly DocumentIngestor $ingestor,
     ) {}
 
     /**
@@ -79,28 +77,8 @@ class EvalRunner
      */
     private function ingest(User $user, array $paths): void
     {
-        $disk = config('knowledge.uploads.disk');
-
         foreach ($paths as $path) {
-            $file = new UploadedFile($path, basename($path), null, null, true);
-            $extension = strtolower($file->getClientOriginalExtension());
-
-            $document = $user->documents()->create([
-                'title' => pathinfo($path, PATHINFO_FILENAME),
-                'original_name' => basename($path),
-                'mime_type' => $file->getMimeType() ?? 'application/octet-stream',
-                'size_bytes' => $file->getSize(),
-                'disk' => $disk,
-                'path' => $file->storeAs("documents/{$user->id}", Str::uuid().'.'.$extension, $disk),
-                'checksum' => hash_file('sha256', $path),
-            ]);
-
-            ProcessDocument::dispatchSync($document);
-            $document->refresh();
-
-            if ($document->status !== DocumentStatus::Ready) {
-                throw new RuntimeException("Could not ingest {$document->original_name}: ".($document->error ?? $document->status->value));
-            }
+            $this->ingestor->ingest($user, $path);
         }
     }
 

@@ -5,9 +5,16 @@ use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DocumentController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('config', fn () => [
+    'demo' => (bool) config('knowledge.demo.enabled'),
+    'registration' => (bool) config('knowledge.registration.enabled'),
+    'limits' => config('knowledge.limits'),
+]);
+
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('guest', [AuthController::class, 'guest']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {

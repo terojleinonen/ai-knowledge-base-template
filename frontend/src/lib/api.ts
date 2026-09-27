@@ -69,8 +69,9 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
       onUnauthorized?.()
     }
 
+    // Laravel's throttle middleware says "Too Many Attempts."; daily limits carry their own message.
     const message =
-      response.status === 429
+      response.status === 429 && (!body.message || body.message === 'Too Many Attempts.')
         ? 'Too many requests. Please wait a moment and try again.'
         : (body.message ?? `Request failed (${response.status})`)
 
