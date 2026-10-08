@@ -155,3 +155,42 @@ it('does not treat factual contractions as "not in the sources"', function () {
     expect(CitationRepairer::isNotFoundStatement('Batteries aren’t covered by the warranty [1].'))->toBeFalse()
         ->and(CitationRepairer::isNotFoundStatement("You don't need a certificate for the first three days [1]."))->toBeFalse();
 });
+
+it('recognises "can\'t answer" refusals', function (string $text) {
+    expect(CitationRepairer::isNotFoundStatement($text))->toBeTrue();
+})->with([
+    // Real claude-opus-5 output.
+    "The sources provided cover Northwind Labs' employee handbook and security policy — they contain no recipes or cooking information, so I can't answer this question from them.",
+    'I cannot answer that from the provided material.',
+    'I am unable to determine the price.',
+]);
+
+it('strips the citation from a "can\'t answer" refusal', function () use ($handbookVacation, $security) {
+    $answer = "The sources provided cover Northwind Labs' employee handbook and security policy — they contain no recipes or cooking information, so I can't answer this question from them [2].";
+
+    expect($this->repairer->repair($answer, [$handbookVacation, $security]))->not->toContain('[2]');
+});
+
+it('decides whether a whole answer declines', function (string $answer, bool $declines) {
+    expect(CitationRepairer::declinesToAnswer($answer))->toBe($declines);
+})->with([
+    // Real claude-opus-5 answer: correct, cited, with a caveat. Not a refusal.
+    'answer with a caveat' => [
+        "**Who and how fast**\n\n- Report lost or stolen equipment to **IT within 24 hours** [2].\n- If you suspect a security incident, report it **immediately** to security@northwind.example [1]. Note: the sources don't explicitly classify a lost laptop as a security incident, so this is the general incident channel.\n\n**Encryption**\n\n- Yes — laptops must have **full-disk encryption** enabled [1].",
+        false,
+    ],
+    'refusal even with a stray citation' => ["The sources contain no recipes, so I can't answer this question from them [2].", true],
+    'refusal naming sources by number' => ['[1] and [3] do not contain information about parking policies.', true],
+    'plain refusal' => ["The documents don't mention parking.", true],
+    'uncited factual answer' => ['Employees get 30 vacation days per year.', false],
+    // Real claude-opus-5 refusals that go on to offer related, cited facts.
+    'refusal with related context' => [
+        "The provided sources don't contain any information about parking at the office. They cover information security and employee benefits, but nothing about parking [1][3].\n\nYou'd need to check with HR or facilities.",
+        true,
+    ],
+    'refusal listing what does exist' => [
+        "The sources don't contain any information about an \"Aurora Pro enterprise support contract\" — no such product or support tier is mentioned.\n\nThe only pricing listed is [1]:\n- Aurora Node: 149 euros [1]\n- Aurora Gateway: 490 euros [1]",
+        true,
+    ],
+    'answer first, caveat later' => ['Employees get 30 vacation days per year [1]. The sources don\'t say how part-time staff are treated.', false],
+]);
