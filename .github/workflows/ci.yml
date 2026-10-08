@@ -106,7 +106,9 @@ jobs:
 
       - name: Smoke test the container
         run: |
-          docker run -d --name kb -p 8080:10000 \
+          # no-new-privileges: hosts such as Render run containers this way, which forbids
+          # executing binaries that carry file capabilities.
+          docker run -d --name kb -p 8080:10000 --security-opt no-new-privileges:true \
             -e PORT=10000 \
             -e APP_KEY="base64:$(openssl rand -base64 32)" \
             -e DB_CONNECTION=sqlite -e DB_DATABASE=/tmp/kb.sqlite \
