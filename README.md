@@ -256,7 +256,9 @@ Abuse limits keep a public demo up and its database small. Neon's free tier has 
 |---|---|---|
 | `KB_LIMIT_CHUNKS_PER_USER` | 150 | One visitor filling the database; checked *before* embedding |
 | `KB_LIMIT_GUESTS_PER_DAY` | 150 | Unlimited guest accounts |
-| `KB_LIMIT_GUESTS_PER_IP_PER_HOUR`, `KB_LIMIT_QUESTIONS_PER_IP` | off until the visitor IP is configured | One visitor using up the daily caps |
+| `KB_LIMIT_GUESTS_PER_IP_PER_HOUR`, `KB_LIMIT_QUESTIONS_PER_IP` | 10 / 30 | One visitor using up the daily caps |
+
+On Render (behind Cloudflare), `render.yaml` uses `KB_CLIENT_IP_HEADER=CF-Connecting-IP`. Tested: Cloudflare rejects requests that try to set that header themselves, while a forged `X-Forwarded-For` is simply passed along. `bin/check-demo` fails if the API starts seeing a proxy address instead.
 
 **Per-visitor limits need the visitor's real IP.** Behind a proxy (Render, Cloudflare…), the app sees the proxy's address unless you set `TRUSTED_PROXIES` (the proxies' addresses or CIDR ranges) or `KB_CLIENT_IP_HEADER` (a header the edge sets and visitors can't forge, such as `CF-Connecting-IP`). `GET /api/client-ip` shows what the app sees. `TRUSTED_PROXIES=*` is refused: in Laravel it trusts every address, so visitors could forge their IP with `X-Forwarded-For`.
 

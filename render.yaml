@@ -79,6 +79,11 @@ services:
         value: "150"           # new demo sessions per day, all visitors
       - key: KB_LIMIT_CHUNKS_PER_USER
         value: "150"           # stored passages per account (~1.4 MB of database each); demo docs use 6
-      # Per-visitor limits stay off until the visitor IP is resolved behind Render's proxy
-      # (TRUSTED_PROXIES or KB_CLIENT_IP_HEADER; check /api/client-ip), or every visitor shares them:
-      # KB_LIMIT_GUESTS_PER_IP_PER_HOUR, KB_LIMIT_QUESTIONS_PER_IP
+      # Visitor IP behind Render's Cloudflare edge. Verified: Cloudflare rejects requests that
+      # try to set CF-Connecting-IP themselves, so visitors can't forge it. (X-Forwarded-For can be.)
+      - key: KB_CLIENT_IP_HEADER
+        value: CF-Connecting-IP
+      - key: KB_LIMIT_GUESTS_PER_IP_PER_HOUR
+        value: "10"
+      - key: KB_LIMIT_QUESTIONS_PER_IP
+        value: "30"

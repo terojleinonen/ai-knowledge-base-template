@@ -10,6 +10,7 @@ Exits non-zero if any check fails.
 """
 
 import argparse
+import ipaddress
 import json
 import re
 import sys
@@ -85,6 +86,15 @@ def main():
     })
     allowed = {k.lower(): v for k, v in headers.items()}.get("access-control-allow-origin")
     check("CORS allows the frontend", allowed == web, f"allow-origin: {allowed}")
+
+    # 4b. Per-visitor limits need the visitor's real IP, not the proxy's (e.g. ::1 or 10.x).
+    status, _, body = request("GET", f"{api}/api/client-ip")
+    seen = json.loads(body).get("ip", "") if status == 200 else ""
+    try:
+        public = ipaddress.ip_address(seen).is_global
+    except ValueError:
+        public = False
+    check("API sees visitors' real IPs", public, f"sees {seen or body[:80]}")
 
     # 5. Guest session with the sample documents.
     status, _, body = request("POST", f"{api}/api/auth/guest", headers={"Origin": web})
