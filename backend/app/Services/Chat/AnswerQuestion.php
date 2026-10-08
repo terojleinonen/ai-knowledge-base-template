@@ -19,11 +19,15 @@ use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use Laravel\Ai\Exceptions\RateLimitedException;
 use Laravel\Ai\Messages\AssistantMessage;
 use Laravel\Ai\Messages\UserMessage;
+use Laravel\Ai\Responses\Data\FinishReason;
+use Laravel\Ai\Streaming\Events\StreamEnd;
 use Laravel\Ai\Streaming\Events\TextDelta;
 use Throwable;
 
 class AnswerQuestion
 {
+    public const REFUSED_ANSWER = "I can't answer this question. Try rephrasing it, or ask about something else in your documents.";
+
     public const USAGE_LIMIT_MESSAGE = 'The AI service has reached its usage limit for now. Please try again later.';
 
     public const NO_CONTEXT_ANSWER = "I couldn't find anything relevant to that in your documents. Try rephrasing the question or uploading a document that covers it.";
@@ -43,16 +47,21 @@ class AnswerQuestion
     {
         $results = $this->retrieve($user, $question, $documentIds);
 
-        $answer = $results === []
-            ? self::NO_CONTEXT_ANSWER
-            : $this->agent($conversation)->prompt(
-                $this->buildPrompt($question, $results),
-                provider: config('knowledge.chat.provider'),
-                model: config('knowledge.chat.model'),
-                timeout: (int) config('knowledge.chat.timeout'),
-            )->text;
+        if ($results === []) {
+            return $this->persist($user, $conversation, $question, self::NO_CONTEXT_ANSWER, $results);
+        }
 
-        return $this->persist($user, $conversation, $question, $answer, $results);
+        $response = $this->agent($conversation)->prompt(
+            $this->buildPrompt($question, $results),
+            provider: config('knowledge.chat.provider'),
+            model: config('knowledge.chat.model'),
+            timeout: (int) config('knowledge.chat.timeout'),
+        );
+
+        // A refusal has empty (or, mid-output, partial) text: never present it as an answer.
+        $refused = $response->steps->last()?->finishReason === FinishReason::ContentFilter || trim($response->text) === '';
+
+        return $this->persist($user, $conversation, $question, $refused ? self::REFUSED_ANSWER : $response->text, $results);
     }
 
     /**
@@ -61,7 +70,8 @@ class AnswerQuestion
      *
      * The exchange is persisted when the answer completes, or with the partial
      * answer if the client disconnects mid-stream. Deltas carry the model's raw
-     * text; the "done" message has citations verified against the sources.
+     * text; the "done" message has citations verified against the sources, and
+     * replaces the deltas entirely if the model declined to answer.
      *
      * @param  list<int>|null  $documentIds
      * @return Generator<int, StreamedEvent>
@@ -97,6 +107,10 @@ class AnswerQuestion
 
                     yield new StreamedEvent('delta', ['text' => $delta]);
                 }
+            } catch (AnswerRefusedException) {
+                // Declined (possibly mid-output): discard the partial text. The "done" message
+                // carries the saved replacement, which the client shows instead of the deltas.
+                $answer = self::REFUSED_ANSWER;
             } catch (Throwable $e) {
                 report($e);
                 $failed = true;
@@ -142,6 +156,8 @@ class AnswerQuestion
         foreach ($events as $event) {
             if ($event instanceof TextDelta && $event->delta !== '') {
                 yield $event->delta;
+            } elseif ($event instanceof StreamEnd && $event->reason === FinishReason::ContentFilter->value) {
+                throw new AnswerRefusedException;
             }
         }
     }

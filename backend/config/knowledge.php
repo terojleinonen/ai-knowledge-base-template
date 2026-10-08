@@ -16,6 +16,11 @@ return [
         'provider' => env('KB_CHAT_PROVIDER', 'openai'),
         'model' => env('KB_CHAT_MODEL', 'gpt-6-luna'),
         'timeout' => (int) env('KB_CHAT_TIMEOUT', 120),
+        // Anthropic only. Effort: low|medium|high|xhigh|max (Claude Opus 5.5 defaults to medium).
+        'effort' => env('KB_CHAT_EFFORT') ?: null,
+        // Anthropic only. "default" retries a declined request on Anthropic's recommended
+        // fallback model, server-side (Claude Opus 5.5 / Opus 5 / Fable 5.1 / Sonnet 5.5).
+        'fallbacks' => env('KB_CHAT_FALLBACKS') ?: null,
     ],
 
     'embeddings' => [

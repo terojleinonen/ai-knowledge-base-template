@@ -164,6 +164,15 @@ class EvaluateKnowledgeBase extends Command
             $this->components->twoColumnDetail('Correct abstentions (unanswerable)', $pct($s['correct_abstentions']));
             $this->components->twoColumnDetail('False abstentions (answerable)', (string) ($s['false_abstentions'] ?? 'n/a'));
             $this->components->twoColumnDetail('Latency p50 / max', $ms($s['answer_ms_p50']).' / '.$ms($s['answer_ms_max']));
+
+            if ($s['model_calls'] > 0) {
+                $this->components->twoColumnDetail(
+                    'Chat tokens: input / output (per model call)',
+                    sprintf('%s / %s  (%s / %s)',
+                        number_format($s['input_tokens']), number_format($s['output_tokens']),
+                        number_format($s['input_tokens'] / $s['model_calls']), number_format($s['output_tokens'] / $s['model_calls'])),
+                );
+            }
         }
 
         $this->newLine();

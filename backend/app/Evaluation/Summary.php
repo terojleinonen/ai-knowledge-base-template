@@ -42,6 +42,11 @@ final class Summary
             'citation_precision' => self::ratio(array_sum(array_map(fn (CaseResult $r) => $r->correctCitations, $answeredAnswerable)), $citations),
             'uncited_answers' => $answeredAnswerable === [] ? null : count(array_filter($answeredAnswerable, fn (CaseResult $r) => $r->citations === 0 && ! $r->abstained)),
 
+            // Chat model tokens (answered cases)
+            'input_tokens' => array_sum(array_map(fn (CaseResult $r) => $r->inputTokens, $answered)),
+            'output_tokens' => array_sum(array_map(fn (CaseResult $r) => $r->outputTokens, $answered)),
+            'model_calls' => array_sum(array_map(fn (CaseResult $r) => $r->modelCalls, $answered)),
+
             // Latency
             'retrieval_ms_p50' => self::median(array_map(fn (CaseResult $r) => $r->retrievalMs, $results)),
             'answer_ms_p50' => self::median(array_map(fn (CaseResult $r) => (float) $r->answerMs, $answered)),
