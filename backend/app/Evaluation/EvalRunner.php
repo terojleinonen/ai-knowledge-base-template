@@ -116,7 +116,7 @@ class EvalRunner
         $result->answer = $message->content;
 
         $result->abstained = $message->content === AnswerQuestion::NO_CONTEXT_ANSWER
-            || CitationRepairer::isNotFoundStatement($message->content);
+            || CitationRepairer::declinesToAnswer($message->content);
 
         foreach ($case->facts as $alternatives) {
             if ($this->containsAny($message->content, $alternatives)) {

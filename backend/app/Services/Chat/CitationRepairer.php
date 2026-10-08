@@ -34,6 +34,7 @@ class CitationRepairer
         .'|(?:^|[.!?]\s+)(?:\[\d+\]\s*(?:,|and|&)?\s*)+[^.!?]{0,40}(?:\b(?:not|no)|n[\'’]t)\b'
         .'|\bno (?:information|mention|details)\b'
         .'|\b(?:could|can)(?:n?[\'’]t| ?not) find\b'
+        .'|\b(?:can(?:not|[\'’]t)|unable to|not able to) (?:answer|determine|tell|say)\b'
         .'/iu';
 
     private const STOPWORDS = [
@@ -63,7 +64,7 @@ class CitationRepairer
         $this->index($sources);
 
         $lines = array_map(
-            fn (string $line) => implode(' ', array_map($this->repairSentence(...), $this->sentences($line))),
+            fn (string $line) => implode(' ', array_map($this->repairSentence(...), self::sentences($line))),
             explode("\n", $answer),
         );
 
@@ -76,6 +77,28 @@ class CitationRepairer
     public static function isNotFoundStatement(string $text): bool
     {
         return preg_match(self::NOT_FOUND, $text) === 1;
+    }
+
+    /**
+     * Whether a whole answer declines to answer, judged by its first real sentence
+     * (headings skipped). Refusals lead with "the sources don't cover this", even when
+     * they go on to offer related, cited facts; answers lead with facts and may add a
+     * caveat later ("note: the sources don't say whether...").
+     */
+    public static function declinesToAnswer(string $answer): bool
+    {
+        foreach (explode("\n", $answer) as $line) {
+            $line = trim(preg_replace('/^\s*(?:[-*•]|\d+[.)])\s+/u', '', $line) ?? $line);
+
+            // Skip blank lines and headings ("# Title", "**Title**", "**Title:**").
+            if ($line === '' || str_starts_with($line, '#') || preg_match('/^\*\*[^*]+\*\*:?$/u', $line) === 1) {
+                continue;
+            }
+
+            return self::isNotFoundStatement(self::sentences($line)[0]);
+        }
+
+        return false;
     }
 
     private function repairSentence(string $sentence): string
@@ -137,7 +160,7 @@ class CitationRepairer
      *
      * @return list<string>
      */
-    private function sentences(string $line): array
+    private static function sentences(string $line): array
     {
         $fragments = preg_split('/(?<=[.!?])\s+(?=\S)/u', $line) ?: [$line];
         $sentences = [];
