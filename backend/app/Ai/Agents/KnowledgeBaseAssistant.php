@@ -4,10 +4,12 @@ namespace App\Ai\Agents;
 
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
+use Laravel\Ai\Contracts\HasProviderOptions;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 
-class KnowledgeBaseAssistant implements Agent, Conversational
+class KnowledgeBaseAssistant implements Agent, Conversational, HasProviderOptions
 {
     use Promptable;
 
@@ -37,5 +39,25 @@ class KnowledgeBaseAssistant implements Agent, Conversational
     public function messages(): iterable
     {
         return $this->history;
+    }
+
+    /**
+     * Anthropic request options: effort and server-side refusal fallbacks, when configured.
+     *
+     * @return array<string, mixed>
+     */
+    public function providerOptions(Lab|string $provider): array
+    {
+        if ($provider !== Lab::Anthropic && $provider !== 'anthropic') {
+            return [];
+        }
+
+        $effort = config('knowledge.chat.effort');
+        $fallbacks = config('knowledge.chat.fallbacks');
+
+        return array_filter([
+            'fallbacks' => $fallbacks,
+            'output_config' => $effort ? ['effort' => $effort] : null,
+        ]);
     }
 }

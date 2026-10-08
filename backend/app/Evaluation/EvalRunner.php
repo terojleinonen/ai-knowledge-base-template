@@ -10,7 +10,9 @@ use App\Services\Retrieval\Embedder;
 use App\Services\Retrieval\SearchResult;
 use App\Services\Retrieval\VectorStore;
 use Closure;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
+use Laravel\Ai\Events\AgentPrompted;
 
 /**
  * Runs a dataset against the real ingestion, retrieval and answering pipeline
@@ -19,6 +21,9 @@ use Illuminate\Support\Str;
 class EvalRunner
 {
     public const USER_EMAIL_DOMAIN = 'kb-eval.invalid';
+
+    /** The case currently being evaluated, for attributing model usage. */
+    private ?CaseResult $current = null;
 
     public function __construct(
         private readonly Embedder $embedder,
@@ -35,6 +40,15 @@ class EvalRunner
     {
         self::cleanUp();
 
+        // Attribute the chat model's calls and token usage to the case being evaluated.
+        Event::listen(AgentPrompted::class, function (AgentPrompted $event) {
+            if ($this->current !== null) {
+                $this->current->modelCalls++;
+                $this->current->inputTokens += $event->response->usage->inputTokens;
+                $this->current->outputTokens += $event->response->usage->outputTokens;
+            }
+        });
+
         $user = User::create([
             'name' => 'KB Eval',
             'email' => 'run-'.Str::lower((string) Str::ulid()).'@'.self::USER_EMAIL_DOMAIN,
@@ -47,12 +61,14 @@ class EvalRunner
             $results = [];
 
             foreach (array_slice($dataset->cases, 0, $limit) as $i => $case) {
-                $results[] = $result = $this->evaluate($user, $case, $withAnswers);
+                $this->current = new CaseResult($case);
+                $results[] = $result = $this->evaluate($user, $this->current, $withAnswers);
                 $onResult?->__invoke($result, $i + 1);
             }
 
             return $results;
         } finally {
+            $this->current = null;
             self::deleteUser($user);
         }
     }
@@ -82,9 +98,9 @@ class EvalRunner
         }
     }
 
-    private function evaluate(User $user, EvalCase $case, bool $withAnswers): CaseResult
+    private function evaluate(User $user, CaseResult $result, bool $withAnswers): CaseResult
     {
-        $result = new CaseResult($case);
+        $case = $result->case;
 
         $start = hrtime(true);
         $hits = $this->store->search(

@@ -56,6 +56,8 @@ return [
             'driver' => 'anthropic',
             'key' => env('ANTHROPIC_API_KEY'),
             'url' => env('ANTHROPIC_URL', 'https://api.anthropic.com/v1'),
+            // server-side-fallback-2026-07-01 enables `fallbacks: "default"` (see KB_CHAT_FALLBACKS).
+            'anthropic_beta' => env('ANTHROPIC_BETA', 'web-fetch-2025-09-10,server-side-fallback-2026-07-01'),
         ],
 
         'azure' => [

@@ -20,6 +20,13 @@ final class CaseResult
 
     public int $factsFound = 0;
 
+    /** Chat model calls and tokens for this case's answer (output includes thinking). */
+    public int $modelCalls = 0;
+
+    public int $inputTokens = 0;
+
+    public int $outputTokens = 0;
+
     public bool $abstained = false;
 
     public int $citations = 0;
@@ -77,6 +84,9 @@ final class CaseResult
             'retrieval_ms' => round($this->retrievalMs),
             'answer' => $this->answer,
             'answer_ms' => $this->answerMs === null ? null : round($this->answerMs),
+            'model_calls' => $this->modelCalls,
+            'input_tokens' => $this->inputTokens,
+            'output_tokens' => $this->outputTokens,
             'facts_found' => $this->factsFound,
             'facts_total' => $this->factsTotal(),
             'missing_facts' => $this->missingFacts,

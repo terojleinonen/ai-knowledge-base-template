@@ -38,7 +38,9 @@ it('evaluates retrieval and answers, then cleans up', function () {
         'judged' => 3,
     ])->and($report['cases'][0]['answer'])->toBe('Employees receive thirty vacation days annually [1].')
         ->and($report['cases'][1]['passed'])->toBeFalse()
-        ->and($report['settings']['repair'])->toBe('on');
+        ->and($report['settings']['repair'])->toBe('on')
+        ->and($report['summary']['model_calls'])->toBe(2)
+        ->and($report['cases'][2]['model_calls'])->toBe(0); // off-topic: answered without the model
 
     // The throwaway user, its documents and stored files are gone.
     expect(User::count())->toBe(0)->and(Document::count())->toBe(0)
