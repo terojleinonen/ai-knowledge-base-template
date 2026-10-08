@@ -252,6 +252,19 @@ Connect the repository. Use root directory `frontend`, build command `npm run bu
 
 On free hosting, uploaded files are lost when the container restarts. Their extracted text and embeddings are in the database, so search and chat keep working; only "Retry" on those documents fails.
 
+### Checking the live demo
+
+`bin/check-demo` runs an end-to-end check against a deployment. It wakes the API and checks settings, that the frontend loads and points at the API, CORS, guest sessions with the sample documents, and the search pipeline:
+
+```bash
+bin/check-demo --api https://<service>.onrender.com --web https://<project>.pages.dev        # no LLM cost
+bin/check-demo --api https://<service>.onrender.com --web https://<project>.pages.dev --ask  # + one real question
+```
+
+The **Demo check** workflow (`.github/workflows/demo-check.yml`) runs it daily and adds the real question on Mondays. It can also be started by hand from the Actions tab. GitHub emails you when a scheduled run fails. Set the `DEMO_API_URL` / `DEMO_WEB_URL` repository variables if your URLs differ.
+
+Don't use an uptime pinger to keep the free API awake. While awake, the background queue worker keeps querying the database, which uses up Neon's free monthly compute hours. A daily check wakes it once and lets it sleep again.
+
 ### Other hosts
 
 The image runs anywhere Docker does. Run the same image as a web service and, on paid plans, as a separate worker (`php artisan queue:work --tries=3 --timeout=900`) plus `php artisan schedule:work`. Use S3-compatible storage (`KB_UPLOAD_DISK`) if you run more than one instance.
