@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { AnswerText } from '../components/AnswerText'
+import { plainText } from '../lib/markdown'
 import { Alert, Button, Spinner } from '../components/ui'
 import { useConversation } from '../hooks/conversations'
 import { useDocuments } from '../hooks/documents'
@@ -165,7 +166,7 @@ function SourceList({ sources, messageId }: { sources: Source[]; messageId: numb
               {s.document_title}
               <span className="ml-2 text-xs font-normal text-slate-400">relevance {Math.round(s.score * 100)}%</span>
             </p>
-            <p className="mt-1 text-slate-600">{s.excerpt}</p>
+            <p className="mt-1 text-slate-600">{plainText(s.excerpt)}</p>
           </li>
         ))}
       </ol>
