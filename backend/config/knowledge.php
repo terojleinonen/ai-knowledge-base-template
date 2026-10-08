@@ -44,6 +44,8 @@ return [
         'disk' => env('KB_UPLOAD_DISK', 'local'),
         'max_kilobytes' => (int) env('KB_UPLOAD_MAX_KB', 20480),
         'mimes' => ['pdf', 'txt', 'md', 'docx'],
+        // Uncompressed size limit for a DOCX body: a small .docx can be a zip bomb.
+        'max_docx_xml_bytes' => 50 * 1024 * 1024,
     ],
 
     'chunking' => [
@@ -88,8 +90,18 @@ return [
         'enabled' => (bool) env('KB_REGISTRATION_ENABLED', true),
     ],
 
+    // Header carrying the visitor's IP when the edge sets it (e.g. CF-Connecting-IP); see App\Support\ClientIp.
+    'client_ip_header' => env('KB_CLIENT_IP_HEADER') ?: null,
+
     'limits' => [
         'questions_per_user_per_day' => filled(env('KB_LIMIT_QUESTIONS_PER_USER')) ? (int) env('KB_LIMIT_QUESTIONS_PER_USER') : null,
+        'questions_per_ip_per_day' => filled(env('KB_LIMIT_QUESTIONS_PER_IP')) ? (int) env('KB_LIMIT_QUESTIONS_PER_IP') : null, // see guests_per_ip_per_hour
+        'guests_per_day' => filled(env('KB_LIMIT_GUESTS_PER_DAY')) ? (int) env('KB_LIMIT_GUESTS_PER_DAY') : null,
+        // Per-visitor (IP) limits: only enable once the visitor IP is resolved correctly behind
+        // your proxy (TRUSTED_PROXIES / KB_CLIENT_IP_HEADER), or every visitor shares one limit.
+        'guests_per_ip_per_hour' => filled(env('KB_LIMIT_GUESTS_PER_IP_PER_HOUR')) ? (int) env('KB_LIMIT_GUESTS_PER_IP_PER_HOUR') : null,
+        // Stored passages per account: bounds database growth from uploads (a 2 MB text file is ~2,000).
+        'chunks_per_user' => filled(env('KB_LIMIT_CHUNKS_PER_USER')) ? (int) env('KB_LIMIT_CHUNKS_PER_USER') : null,
         'questions_per_day' => filled(env('KB_LIMIT_QUESTIONS_PER_DAY')) ? (int) env('KB_LIMIT_QUESTIONS_PER_DAY') : null,
         'documents_per_user' => filled(env('KB_LIMIT_DOCUMENTS_PER_USER')) ? (int) env('KB_LIMIT_DOCUMENTS_PER_USER') : null,
     ],

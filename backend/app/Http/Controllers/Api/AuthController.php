@@ -8,6 +8,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Demo\DemoAccounts;
+use App\Services\UsageLimits;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -37,9 +38,11 @@ class AuthController extends Controller
         return $this->tokenResponse($user, $request->input('device_name', 'web'));
     }
 
-    public function guest(Request $request, DemoAccounts $demo): JsonResponse
+    public function guest(Request $request, DemoAccounts $demo, UsageLimits $limits): JsonResponse
     {
         abort_unless(config('knowledge.demo.enabled'), 404);
+
+        $limits->consumeGuest();
 
         return $this->tokenResponse($demo->createGuest(), 'demo', 201);
     }

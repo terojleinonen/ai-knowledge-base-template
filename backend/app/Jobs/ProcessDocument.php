@@ -10,6 +10,7 @@ use App\Services\Documents\TextChunker;
 use App\Services\Documents\TextExtractor;
 use App\Services\Retrieval\Embedder;
 use App\Services\Retrieval\VectorCodec;
+use App\Services\UsageLimits;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,7 @@ class ProcessDocument implements ShouldQueue
 
     public function __construct(public Document $document) {}
 
-    public function handle(TextExtractor $extractor, TextChunker $chunker, Embedder $embedder): void
+    public function handle(TextExtractor $extractor, TextChunker $chunker, Embedder $embedder, UsageLimits $limits): void
     {
         $document = $this->document;
         $document->update(['status' => DocumentStatus::Processing, 'error' => null]);
@@ -45,6 +46,16 @@ class ProcessDocument implements ShouldQueue
 
             if ($chunks === []) {
                 throw new DocumentProcessingException('No text could be extracted. Scanned PDFs need OCR before upload.');
+            }
+
+            // Checked before embedding: bounds both API cost and database growth.
+            $remaining = $limits->remainingChunks($document->user, $document->id);
+
+            if ($remaining !== null && count($chunks) > $remaining) {
+                throw new DocumentProcessingException(sprintf(
+                    'This document is too large: it has %d passages and your account has room for %d more. Delete a document or upload a shorter one.',
+                    count($chunks), $remaining,
+                ));
             }
         } catch (DocumentProcessingException $e) {
             $this->fail($e);

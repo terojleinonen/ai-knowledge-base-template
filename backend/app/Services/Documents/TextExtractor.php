@@ -54,6 +54,15 @@ class TextExtractor
                 throw new DocumentProcessingException('The DOCX file is corrupted or not a valid Word document.');
             }
 
+            // Guard against zip bombs: a small .docx can unpack to gigabytes.
+            $stat = $zip->statName('word/document.xml');
+
+            if ($stat !== false && $stat['size'] > (int) config('knowledge.uploads.max_docx_xml_bytes')) {
+                $zip->close();
+
+                throw new DocumentProcessingException('The DOCX file is too large to process.');
+            }
+
             $xml = $zip->getFromName('word/document.xml');
             $zip->close();
 

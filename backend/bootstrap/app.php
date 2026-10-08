@@ -16,7 +16,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Behind a reverse proxy, trust its X-Forwarded-* headers so $request->ip() is the
+        // visitor's address. List the proxies' addresses or CIDR ranges explicitly: Laravel's "*"
+        // trusts *every* address, so the visitor's own (forgeable) X-Forwarded-For entry wins.
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            if (in_array(trim($proxies), ['*', '**'], true)) {
+                throw new InvalidArgumentException('TRUSTED_PROXIES="*" would let visitors forge their IP via X-Forwarded-For. List proxy addresses or CIDR ranges, or set KB_CLIENT_IP_HEADER.');
+            }
+
+            $middleware->trustProxies(at: $proxies);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
