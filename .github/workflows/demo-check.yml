@@ -1,0 +1,34 @@
+name: Demo check
+
+# Checks the deployed demo end to end. A failed scheduled run emails the repository owner.
+on:
+  schedule:
+    - cron: '23 5 * * *' # daily, 05:23 UTC
+  workflow_dispatch:
+    inputs:
+      ask:
+        description: Also ask one real question (one chat model call, about $0.007)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DEMO_API_URL: ${{ vars.DEMO_API_URL || 'https://knowledge-base-api-5zx1.onrender.com' }}
+      DEMO_WEB_URL: ${{ vars.DEMO_WEB_URL || 'https://ai-knowledge-base-template.pages.dev' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the live demo
+        run: |
+          # The real question (LLM cost) runs weekly on Mondays, or when requested manually.
+          ask=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.ask }}" = "true" ]; then ask="--ask"; fi
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%u)" = "1" ]; then ask="--ask"; fi
+
+          bin/check-demo --api "$DEMO_API_URL" --web "$DEMO_WEB_URL" $ask
