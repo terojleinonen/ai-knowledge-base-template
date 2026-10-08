@@ -20,15 +20,8 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
 
 Route::post('auth/guest', [AuthController::class, 'guest'])->middleware('throttle:guests');
 
-// The caller's own IP as the app sees it: lets you verify proxy configuration after deploying.
-Route::get('client-ip', fn (Request $request) => [
-    'ip' => ClientIp::of($request),
-    'request_ip' => $request->ip(),
-    'cf_connecting_ip' => $request->header('CF-Connecting-IP'),
-    // Temporary, to configure TRUSTED_PROXIES / KB_CLIENT_IP_HEADER for the hosting platform.
-    'x_forwarded_for' => $request->header('X-Forwarded-For'),
-    'true_client_ip' => $request->header('True-Client-IP'),
-])->middleware('throttle:auth');
+// The caller's own IP as the app sees it: verifies proxy configuration (bin/check-demo uses it).
+Route::get('client-ip', fn (Request $request) => ['ip' => ClientIp::of($request)])->middleware('throttle:auth');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/me', [AuthController::class, 'me']);
