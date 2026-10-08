@@ -9,6 +9,7 @@ use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
 use App\Services\Chat\AnswerQuestion;
 use App\Services\UsageLimits;
+use App\Support\ClientIp;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -38,7 +39,7 @@ class ConversationController extends Controller
 
     public function ask(AskQuestionRequest $request, AnswerQuestion $answer, UsageLimits $limits): JsonResponse
     {
-        $limits->consumeQuestion($request->user());
+        $limits->consumeQuestion($request->user(), ClientIp::of($request));
 
         $conversation = $request->filled('conversation_id')
             ? $this->find($request, $request->integer('conversation_id'))
@@ -56,7 +57,7 @@ class ConversationController extends Controller
 
     public function stream(AskQuestionRequest $request, AnswerQuestion $answer, UsageLimits $limits): StreamedResponse
     {
-        $limits->consumeQuestion($request->user());
+        $limits->consumeQuestion($request->user(), ClientIp::of($request));
 
         $conversation = $request->filled('conversation_id')
             ? $this->find($request, $request->integer('conversation_id'))

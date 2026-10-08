@@ -75,3 +75,10 @@ services:
         value: "6"
       - key: KB_UPLOAD_MAX_KB
         value: "2048"
+      - key: KB_LIMIT_GUESTS_PER_DAY
+        value: "150"           # new demo sessions per day, all visitors
+      - key: KB_LIMIT_CHUNKS_PER_USER
+        value: "150"           # stored passages per account (~1.4 MB of database each); demo docs use 6
+      # Per-visitor limits stay off until the visitor IP is resolved behind Render's proxy
+      # (TRUSTED_PROXIES or KB_CLIENT_IP_HEADER; check /api/client-ip), or every visitor shares them:
+      # KB_LIMIT_GUESTS_PER_IP_PER_HOUR, KB_LIMIT_QUESTIONS_PER_IP

@@ -6,6 +6,7 @@ use App\Services\Documents\TextChunker;
 use App\Services\Retrieval\DatabaseVectorStore;
 use App\Services\Retrieval\Embedder;
 use App\Services\Retrieval\VectorStore;
+use App\Support\ClientIp;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -40,10 +41,16 @@ class AppServiceProvider extends ServiceProvider
             ? Password::min(10)->uncompromised()
             : Password::min(8));
 
-        RateLimiter::for('auth', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('auth', fn (Request $request) => Limit::perMinute(10)->by(ClientIp::of($request)));
 
-        RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(30)->by($request->user()?->id ?: $request->ip()));
+        RateLimiter::for('guests', function (Request $request) {
+            $perHour = config('knowledge.limits.guests_per_ip_per_hour');
 
-        RateLimiter::for('chat', fn (Request $request) => Limit::perMinute(20)->by($request->user()?->id ?: $request->ip()));
+            return $perHour === null ? Limit::none() : Limit::perHour($perHour)->by(ClientIp::of($request));
+        });
+
+        RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(30)->by($request->user()?->id ?: ClientIp::of($request)));
+
+        RateLimiter::for('chat', fn (Request $request) => Limit::perMinute(20)->by($request->user()?->id ?: ClientIp::of($request)));
     }
 }

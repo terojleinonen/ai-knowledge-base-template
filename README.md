@@ -250,6 +250,18 @@ Connect the repository. Use root directory `frontend`, build command `npm run bu
 - **Registration is off** (`KB_REGISTRATION_ENABLED=false`).
 - **Daily caps** bound spend: `KB_LIMIT_QUESTIONS_PER_USER` (15), `KB_LIMIT_QUESTIONS_PER_DAY` (100, all users; about $0.70/day at most with Claude Opus 5.5), `KB_LIMIT_DOCUMENTS_PER_USER` (6), and uploads up to 2 MB.
 
+Abuse limits keep a public demo up and its database small. Neon's free tier has 0.5 GB, and a 2 MB text upload alone becomes about 2,000 passages (~19 MB):
+
+| Setting | Demo value | Protects against |
+|---|---|---|
+| `KB_LIMIT_CHUNKS_PER_USER` | 150 | One visitor filling the database; checked *before* embedding |
+| `KB_LIMIT_GUESTS_PER_DAY` | 150 | Unlimited guest accounts |
+| `KB_LIMIT_GUESTS_PER_IP_PER_HOUR`, `KB_LIMIT_QUESTIONS_PER_IP` | off until the visitor IP is configured | One visitor using up the daily caps |
+
+**Per-visitor limits need the visitor's real IP.** Behind a proxy (Render, Cloudflare…), the app sees the proxy's address unless you set `TRUSTED_PROXIES` (the proxies' addresses or CIDR ranges) or `KB_CLIENT_IP_HEADER` (a header the edge sets and visitors can't forge, such as `CF-Connecting-IP`). `GET /api/client-ip` shows what the app sees. `TRUSTED_PROXIES=*` is refused: in Laravel it trusts every address, so visitors could forge their IP with `X-Forwarded-For`.
+
+DOCX files are checked for zip bombs before unpacking, and the frontend sends a strict Content-Security-Policy (`frontend/public/_headers`).
+
 On free hosting, uploaded files are lost when the container restarts. Their extracted text and embeddings are in the database, so search and chat keep working; only "Retry" on those documents fails.
 
 ### Checking the live demo
