@@ -14,6 +14,13 @@ RUN composer dump-autoload --optimize --classmap-authoritative --no-dev --no-scr
 
 FROM dunglas/frankenphp:1-php8.3 AS app
 
+# The image marks frankenphp with the cap_net_bind_service file capability (for ports < 1024).
+# Hosts that drop all capabilities (e.g. Render) then refuse to execute it at all
+# ("Operation not permitted"). We listen on $PORT (> 1024), so drop the marking: a plain
+# copy doesn't carry the security.capability extended attribute.
+RUN cp /usr/local/bin/frankenphp /usr/local/bin/frankenphp.tmp \
+    && mv /usr/local/bin/frankenphp.tmp /usr/local/bin/frankenphp
+
 RUN install-php-extensions pdo_pgsql pdo_mysql intl zip pcntl opcache \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && printf "upload_max_filesize=25M\npost_max_size=26M\nmemory_limit=512M\nopcache.validate_timestamps=0\n" > "$PHP_INI_DIR/conf.d/app.ini"

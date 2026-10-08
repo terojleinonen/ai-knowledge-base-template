@@ -106,7 +106,9 @@ jobs:
 
       - name: Smoke test the container
         run: |
-          docker run -d --name kb -p 8080:10000 \
+          # Locked down like hosts such as Render: no capabilities, no privilege escalation.
+          # A binary marked as needing a dropped capability then can't even be executed.
+          docker run -d --name kb -p 8080:10000 --cap-drop ALL --security-opt no-new-privileges:true \
             -e PORT=10000 \
             -e APP_KEY="base64:$(openssl rand -base64 32)" \
             -e DB_CONNECTION=sqlite -e DB_DATABASE=/tmp/kb.sqlite \
