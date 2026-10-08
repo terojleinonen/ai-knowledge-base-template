@@ -6,6 +6,7 @@ services:
     name: knowledge-base-api
     runtime: docker
     plan: free
+    region: frankfurt          # keep in the same region as the Neon database (AWS eu-central-1)
     rootDir: backend
     dockerfilePath: ./Dockerfile
     healthCheckPath: /up

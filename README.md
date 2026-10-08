@@ -207,7 +207,7 @@ The **AI APIs are the only cost.** The blueprint uses Claude Opus 5.5 for answer
 
 **1. Database: Neon**
 
-Create a project and copy its connection string (`postgresql://…?sslmode=require`).
+Create a project in **AWS Europe Central (Frankfurt)**, the same region as the Render service in `render.yaml`, because every request makes several database queries. Copy the **direct** (non-pooled) connection string (`postgresql://…?sslmode=require`).
 
 **2. API: Render**
 
