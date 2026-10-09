@@ -51,6 +51,7 @@
         <env name="KB_LIMIT_GUESTS_PER_DAY" value="" force="true"/>
         <env name="KB_LIMIT_GUESTS_PER_IP_PER_HOUR" value="" force="true"/>
         <env name="KB_LIMIT_CHUNKS_PER_USER" value="" force="true"/>
+        <env name="KB_LIMIT_STORAGE_MB" value="" force="true"/>
         <env name="KB_CLIENT_IP_HEADER" value="" force="true"/>
         <env name="TRUSTED_PROXIES" value="" force="true"/>
         <env name="KB_UPLOAD_DISK" value="local" force="true"/>

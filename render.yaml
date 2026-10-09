@@ -88,6 +88,8 @@ services:
         value: "2048"
       - key: KB_LIMIT_GUESTS_PER_DAY
         value: "150"           # new demo sessions per day, all visitors
+      - key: KB_LIMIT_STORAGE_MB
+        value: "5000"          # total stored files: half of Cloudflare R2's 10 GB free tier
       - key: KB_LIMIT_CHUNKS_PER_USER
         value: "150"           # stored passages per account (~1.4 MB of database each); demo docs use 6
       # Visitor IP behind Render's Cloudflare edge. Verified: Cloudflare rejects requests that

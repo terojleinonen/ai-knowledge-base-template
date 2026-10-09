@@ -77,6 +77,30 @@ class UsageLimits
     }
 
     /**
+     * Whether a file of the given size still fits in the storage quota of the upload disk.
+     */
+    public function hasStorageFor(int $bytes): bool
+    {
+        $quotaMb = config('knowledge.limits.storage_mb');
+
+        if ($quotaMb === null) {
+            return true;
+        }
+
+        return $this->storedBytes((string) config('knowledge.uploads.disk')) + $bytes <= $quotaMb * 1024 * 1024;
+    }
+
+    /**
+     * Bytes stored on a disk, counting each file once (demo guests share the template's files).
+     */
+    public function storedBytes(string $disk): int
+    {
+        $files = DB::table('documents')->where('disk', $disk)->select('path', 'size_bytes')->distinct();
+
+        return (int) DB::query()->fromSub($files, 'files')->sum('size_bytes');
+    }
+
+    /**
      * Whether the user is below the per-user document limit.
      */
     public function canAddDocument(User $user): bool

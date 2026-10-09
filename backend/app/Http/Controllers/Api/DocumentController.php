@@ -51,6 +51,8 @@ class DocumentController extends Controller
             throw ValidationException::withMessages(['file' => 'You have already uploaded this file.']);
         }
 
+        abort_unless($limits->hasStorageFor((int) $file->getSize()), 507, 'Storage is full right now. Please try again later.');
+
         $disk = config('knowledge.uploads.disk');
         $extension = strtolower($file->getClientOriginalExtension());
         try {
