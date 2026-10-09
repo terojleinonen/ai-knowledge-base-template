@@ -272,6 +272,8 @@ On Render (behind Cloudflare), `render.yaml` uses `KB_CLIENT_IP_HEADER=CF-Connec
 
 **Per-visitor limits need the visitor's real IP.** Behind a proxy (Render, Cloudflare…), the app sees the proxy's address unless you set `TRUSTED_PROXIES` (the proxies' addresses or CIDR ranges) or `KB_CLIENT_IP_HEADER` (a header the edge sets and visitors can't forge, such as `CF-Connecting-IP`). `GET /api/client-ip` shows what the app sees. `TRUSTED_PROXIES=*` is refused: in Laravel it trusts every address, so visitors could forge their IP with `X-Forwarded-For`.
 
+**Bot protection:** with `KB_TURNSTILE_SITE_KEY` and `KB_TURNSTILE_SECRET_KEY` set, "Try the live demo" requires a Cloudflare Turnstile check. The widget appears only when Cloudflare wants an interaction, and the server verifies each token. IP limits stop a single abuser; Turnstile also stops distributed ones. If Cloudflare's verification service is unreachable, requests are let through and logged, and the other limits still apply. To set it up, go to Cloudflare dashboard → **Turnstile** → **Add widget**, add your Pages hostname, and choose the "Managed" mode. Automated checks send `X-Monitor-Token` (`KB_MONITOR_TOKEN`; GitHub secret `DEMO_MONITOR_TOKEN`). Without keys, the check is off (local development).
+
 DOCX files are checked for zip bombs before unpacking, and the frontend sends a strict Content-Security-Policy (`frontend/public/_headers`).
 
 Without R2, uploaded files are lost when the free container restarts. Their extracted text and embeddings are in the database, so search and chat keep working; only "Retry" on those documents fails. With R2 configured, files are kept.
@@ -303,12 +305,12 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - Chat with Claude, OpenAI or local Ollama; embeddings with OpenAI or Ollama
 - Public demo: guest accounts with sample documents, cost caps, per-visitor abuse limits, daily end-to-end check
 - Durable uploads on Cloudflare R2 (any S3-compatible storage works)
+- Bot protection with Cloudflare Turnstile
 
 ### Next
-1. **Bot protection on "Try the live demo"** with Cloudflare Turnstile. IP limits stop a single abuser; Turnstile also stops distributed ones.
-2. **Hybrid search and reranking.** Combine keyword search with vector search so exact terms and numbers are found reliably, then rerank the results. Relevance scores alone don't separate good matches from bad ones (see the calibration under [Public demo mode](#public-demo-mode)).
-3. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level.
-4. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
+1. **Hybrid search and reranking.** Combine keyword search with vector search so exact terms and numbers are found reliably, then rerank the results. Relevance scores alone don't separate good matches from bad ones (see the calibration under [Public demo mode](#public-demo-mode)).
+2. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level.
+3. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
 
 ### Later
 - OCR for scanned PDFs

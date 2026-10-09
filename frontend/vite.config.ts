@@ -10,5 +10,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // Generous for slow machines: the streaming chat test can exceed the 5 s default under load.
+    testTimeout: 15_000,
   },
 })

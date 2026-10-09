@@ -11,6 +11,7 @@ Route::get('config', fn () => [
     'demo' => (bool) config('knowledge.demo.enabled'),
     'registration' => (bool) config('knowledge.registration.enabled'),
     'limits' => config('knowledge.limits'),
+    'turnstile_site_key' => config('knowledge.turnstile.secret_key') ? config('knowledge.turnstile.site_key') : null,
 ]);
 
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {

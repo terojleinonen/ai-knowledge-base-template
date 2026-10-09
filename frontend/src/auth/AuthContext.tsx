@@ -41,7 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login: async (email, password) => authenticate(await api<AuthResponse>('/auth/login', json({ email, password }))),
       register: async (name, email, password, password_confirmation) =>
         authenticate(await api<AuthResponse>('/auth/register', json({ name, email, password, password_confirmation }))),
-      startDemo: async () => authenticate(await api<AuthResponse>('/auth/guest', { method: 'POST' })),
+      startDemo: async (turnstileToken) =>
+        authenticate(await api<AuthResponse>('/auth/guest', json(turnstileToken ? { turnstile_token: turnstileToken } : {}))),
       logout: async () => {
         await api('/auth/logout', { method: 'POST' }).catch(() => undefined)
         reset()
