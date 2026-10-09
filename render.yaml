@@ -62,6 +62,17 @@ services:
       - key: OPENAI_API_KEY      # embeddings (Anthropic has no embeddings API)
         sync: false
 
+      # Durable uploads on Cloudflare R2 (used automatically once R2_BUCKET is set; local disk
+      # otherwise, which is lost on every restart of the free instance).
+      - key: R2_BUCKET
+        sync: false              # e.g. kb-uploads
+      - key: R2_ENDPOINT
+        sync: false              # https://<account-id>.r2.cloudflarestorage.com
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+
       # Public demo: guest sessions, no open registration, bounded spend
       - key: KB_DEMO_ENABLED
         value: "true"

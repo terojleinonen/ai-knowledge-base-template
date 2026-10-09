@@ -4,7 +4,8 @@
 Usage: bin/check-demo --api https://<service>.onrender.com --web https://<project>.pages.dev [--ask]
 
 Without --ask it costs no LLM credit: an off-topic question exercises embeddings, the
-database and the chat endpoint, but is filtered out before the chat model is called.
+database and the chat endpoint, but is filtered out before the chat model is called. A tiny
+upload is stored, indexed, re-indexed from storage and deleted (one small embedding call).
 --ask also asks one real question (one chat model call).
 Exits non-zero if any check fails.
 """
@@ -17,6 +18,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import uuid
 
 USER_AGENT = "kb-demo-check/1.0 (+https://github.com/terojleinonen/ai-knowledge-base-template)"
 
@@ -36,6 +38,32 @@ def request(method, url, body=None, headers=None, timeout=60):
             return res.status, dict(res.headers), res.read().decode()
     except urllib.error.HTTPError as e:
         return e.code, dict(e.headers), e.read().decode(errors="replace")
+
+
+def upload(url, filename, text, headers):
+    boundary = uuid.uuid4().hex
+    body = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+            f'Content-Type: text/plain\r\n\r\n{text}\r\n--{boundary}--\r\n').encode()
+    req = urllib.request.Request(url, data=body, method="POST", headers={
+        "Accept": "application/json", "User-Agent": USER_AGENT,
+        "Content-Type": f"multipart/form-data; boundary={boundary}", **headers,
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=60) as res:
+            return res.status, res.read().decode()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode(errors="replace")
+
+
+def wait_for_ready(api, document_id, auth, timeout=120):
+    started = time.time()
+    while time.time() - started < timeout:
+        status, _, body = request("GET", f"{api}/api/documents/{document_id}", headers=auth)
+        doc = json.loads(body).get("data", {}) if status == 200 else {}
+        if doc.get("status") in ("ready", "failed"):
+            return doc
+        time.sleep(3)
+    return {"status": "timeout"}
 
 
 def check(name, ok, detail=""):
@@ -107,6 +135,24 @@ def main():
     docs = json.loads(body).get("data", []) if status == 200 else []
     ready = [d["title"] for d in docs if d["status"] == "ready"]
     check("sample documents ready", len(docs) > 0 and len(ready) == len(docs), f"{len(ready)}/{len(docs)} ready")
+
+    # 5b. Upload round trip: store, index, re-index from storage (proves the file is still
+    # there, e.g. on R2 across restarts), delete. One tiny embedding call.
+    marker = uuid.uuid4().hex[:8]
+    status, body = upload(f"{api}/api/documents", f"check-{marker}.txt",
+                          f"Demo check {marker}: the storage round trip works and this note is temporary.", auth)
+    document_id = json.loads(body).get("data", {}).get("id") if status == 201 else None
+    if check("upload accepted", bool(document_id), f"HTTP {status}" + (f": {body[:160]}" if status != 201 else "")):
+        doc = wait_for_ready(api, document_id, auth)
+        check("upload indexed", doc.get("status") == "ready", f"status {doc.get('status')}: {doc.get('error') or ''}".strip(": "))
+
+        status, _, body = request("POST", f"{api}/api/documents/{document_id}/reprocess", headers=auth)
+        doc = wait_for_ready(api, document_id, auth) if status == 200 else {"status": f"HTTP {status}"}
+        check("stored file re-read for re-indexing", doc.get("status") == "ready",
+              f"status {doc.get('status')}: {doc.get('error') or ''}".strip(": "))
+
+        status, _, _ = request("DELETE", f"{api}/api/documents/{document_id}", headers=auth)
+        check("upload deleted", status == 204, f"HTTP {status}")
 
     # 6. Search pipeline (embeddings + database), filtered out before the chat model.
     status, _, body = request("POST", f"{api}/api/chat", {"question": "Who won the 2022 football World Cup?"}, auth, timeout=90)

@@ -30,7 +30,8 @@ class DocumentIngestor
             'mime_type' => $file->getMimeType() ?? 'application/octet-stream',
             'size_bytes' => $file->getSize(),
             'disk' => $disk,
-            'path' => $file->storeAs("documents/{$user->id}", Str::uuid().'.'.$extension, $disk),
+            'path' => $file->storeAs("documents/{$user->id}", Str::uuid().'.'.$extension, $disk)
+                ?: throw new RuntimeException("Could not store {$file->getClientOriginalName()} on disk [{$disk}]."),
             'checksum' => hash_file('sha256', $path),
         ]);
 

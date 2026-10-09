@@ -15,6 +15,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use League\Flysystem\FilesystemException;
 
 class DocumentController extends Controller
 {
@@ -52,7 +53,14 @@ class DocumentController extends Controller
 
         $disk = config('knowledge.uploads.disk');
         $extension = strtolower($file->getClientOriginalExtension());
-        $path = $file->storeAs("documents/{$user->id}", Str::uuid().'.'.$extension, $disk);
+        try {
+            $path = $file->storeAs("documents/{$user->id}", Str::uuid().'.'.$extension, $disk);
+        } catch (FilesystemException $e) {
+            report($e);
+            $path = false;
+        }
+
+        abort_if($path === false, 503, 'File storage is unavailable right now. Please try again later.');
 
         $document = $user->documents()->create([
             'title' => $request->input('title') ?: pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),

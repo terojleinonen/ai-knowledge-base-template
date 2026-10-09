@@ -16,6 +16,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\UnableToReadFile;
 use Throwable;
 
 class ProcessDocument implements ShouldQueue
@@ -39,8 +40,13 @@ class ProcessDocument implements ShouldQueue
         $document->update(['status' => DocumentStatus::Processing, 'error' => null]);
 
         try {
-            $contents = Storage::disk($document->disk)->get($document->path)
-                ?? throw new DocumentProcessingException('The uploaded file could not be found.');
+            try {
+                $contents = Storage::disk($document->disk)->get($document->path);
+            } catch (UnableToReadFile) {
+                $contents = null; // missing (other storage errors propagate, so the job retries)
+            }
+
+            $contents ?? throw new DocumentProcessingException('The uploaded file could not be found. Please upload it again.');
 
             $chunks = $chunker->split($extractor->extract($contents, $document->extension()));
 

@@ -42,6 +42,7 @@ class DemoAccounts
         $ready = $template->documents()
             ->where('status', DocumentStatus::Ready)
             ->where('embedding_model', $this->embedder->identifier())
+            ->where('disk', config('knowledge.uploads.disk')) // e.g. moved from local disk to R2
             ->pluck('original_name')
             ->all();
 
