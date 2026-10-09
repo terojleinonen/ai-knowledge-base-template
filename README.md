@@ -250,6 +250,8 @@ Connect the repository. Use root directory `frontend`, build command `npm run bu
 - **Registration is off** (`KB_REGISTRATION_ENABLED=false`).
 - **Daily caps** bound spend: `KB_LIMIT_QUESTIONS_PER_USER` (15), `KB_LIMIT_QUESTIONS_PER_DAY` (100, all users; about $0.70/day at most with Claude Opus 5.5), `KB_LIMIT_DOCUMENTS_PER_USER` (6), and uploads up to 2 MB.
 
+The relevance cutoff `KB_RETRIEVAL_MIN_SCORE=0.2` was calibrated for `text-embedding-3-small` on the sample documents plus 15 unanswerable questions. Answerable questions scored 0.29–0.61, plausible but uncovered ones ("What is the dress code?") 0.20–0.57, and unrelated ones ("Who won the World Cup?") at most 0.12. So the cutoff filters out unrelated questions before any model call, and the model handles the rest. Recalibrate with `kb:eval --retrieval-only` (and `KB_RETRIEVAL_MIN_SCORE=0`) when you change embedding models: the same questions score much higher with `nomic-embed-text`.
+
 Abuse limits keep a public demo up and its database small. Neon's free tier has 0.5 GB, and a 2 MB text upload alone becomes about 2,000 passages (~19 MB):
 
 | Setting | Demo value | Protects against |
@@ -287,7 +289,26 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 
 ## Roadmap
 
-- pgvector `VectorStore` for large corpora
+### Shipped
+- Streamed answers with citations verified against the sources (`CitationRepairer`)
+- `kb:eval`: retrieval and answer quality, citation precision, abstentions and token usage on a sample dataset
+- Chat with Claude, OpenAI or local Ollama; embeddings with OpenAI or Ollama
+- Public demo: guest accounts with sample documents, cost caps, per-visitor abuse limits, daily end-to-end check
+
+### Next
+1. **Durable file storage.** Uploads are lost when the free server restarts, so "Retry" fails for them. Store them in S3-compatible storage such as Cloudflare R2 (`KB_UPLOAD_DISK`).
+2. **Bot protection on "Try the live demo"** with Cloudflare Turnstile. IP limits stop a single abuser; Turnstile also stops distributed ones.
+3. **Hybrid search and reranking.** Combine keyword search with vector search so exact terms and numbers are found reliably, then rerank the results. Relevance scores alone don't separate good matches from bad ones (see the calibration under [Public demo mode](#public-demo-mode)).
+4. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level.
+5. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
+
+### Later
 - OCR for scanned PDFs
-- Email verification and password reset
-- Workspaces / shared knowledge bases
+- pgvector `VectorStore` for collections far larger than the demo's
+- Email verification and password reset (before opening sign-ups)
+- Workspaces: teams sharing one knowledge base
+
+### Known limitations
+- On free hosting, the first request after 15 idle minutes takes up to a minute while the server wakes up.
+- Citation checking matches words, not meaning: a reworded fact is left uncited rather than guessed.
+- Turning away unrelated questions relies mainly on the model, because relevance scores overlap.

@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import productChat from '../assets/product-chat.jpg'
 import { useAuth } from '../auth/useAuth'
 import { DemoButton } from '../components/DemoButton'
 import { Logo } from '../components/ui'
@@ -67,6 +68,14 @@ export function LandingPage() {
               )
             )}
           </div>
+          <img
+            src={productChat}
+            width={2000}
+            height={1264}
+            decoding="async"
+            alt="Knowledge Base answering a question about vacation days, with numbered citations and the source passages it used"
+            className="mx-auto mt-16 h-auto w-full max-w-5xl rounded-xl shadow-2xl ring-1 ring-slate-900/10"
+          />
         </section>
 
         <section className="border-t border-slate-100 bg-slate-50">
