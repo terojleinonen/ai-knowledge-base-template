@@ -61,6 +61,14 @@ export function DemoButton({ className = '' }: { className?: string }) {
   }, [pending])
 
   const verifying = siteKey !== null && token === null
+  const [stuck, setStuck] = useState(false)
+
+  // Some privacy settings and content blockers stop the check without any error.
+  useEffect(() => {
+    if (!verifying) return
+    const timer = setTimeout(() => setStuck(true), 15_000)
+    return () => clearTimeout(timer)
+  }, [verifying])
 
   async function start() {
     setPending(true)
@@ -73,6 +81,7 @@ export function DemoButton({ className = '' }: { className?: string }) {
       setError(e instanceof ApiError ? (e.field('turnstile_token') ?? e.message) : 'Could not start the demo.')
       // Tokens are single-use: get a fresh one for the next attempt.
       setToken(null)
+      setStuck(false)
       if (widget.current) widget.current.api.reset(widget.current.id)
     } finally {
       setPending(false)
@@ -86,6 +95,12 @@ export function DemoButton({ className = '' }: { className?: string }) {
         {verifying && !pending ? 'Checking your browser…' : 'Try the live demo'}
       </Button>
       <div ref={container} className="mt-3 flex justify-center empty:hidden" />
+      {stuck && verifying && !error && (
+        <p className="mt-3 text-sm text-slate-500" role="status">
+          Still checking your browser. If this doesn't finish, reload the page or allow challenges.cloudflare.com in your
+          content blocker.
+        </p>
+      )}
       {pending && slow && (
         <p className="mt-3 text-sm text-slate-500" role="status">
           Waking up the server. It runs on a free tier that sleeps when idle, so this can take up to a minute.

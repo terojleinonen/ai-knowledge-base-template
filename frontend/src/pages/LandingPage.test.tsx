@@ -151,6 +151,24 @@ describe('with Turnstile bot protection', () => {
     expect(screen.getByRole('button', { name: 'Checking your browser…' })).toBeDisabled() // waits for the new token
   })
 
+  it('explains a check that never finishes', async () => {
+    mockApi((url) => (url.endsWith('/config') ? { body: config({ turnstile_site_key: 'site-key' }) } : undefined))
+    vi.useFakeTimers({ shouldAdvanceTime: true }) // before render: the timer starts with the check
+
+    renderLanding()
+    await screen.findByRole('button', { name: 'Checking your browser…' })
+
+    await act(() => vi.advanceTimersByTimeAsync(14_000))
+    expect(screen.queryByText(/Still checking your browser/)).not.toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(2_000))
+    expect(screen.getByText(/Still checking your browser/)).toHaveTextContent('allow challenges.cloudflare.com')
+
+    act(() => callbacks.callback('late-token'))
+    expect(screen.queryByText(/Still checking your browser/)).not.toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
   it('clears a widget error once Turnstile recovers on its own', async () => {
     mockApi((url) => (url.endsWith('/config') ? { body: config({ turnstile_site_key: 'site-key' }) } : undefined))
 
