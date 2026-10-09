@@ -41,7 +41,8 @@ return [
     */
 
     'uploads' => [
-        'disk' => env('KB_UPLOAD_DISK', 'local'),
+        // Uploads go to R2 once its bucket is configured; local disk otherwise (lost on restart on free hosting).
+        'disk' => env('KB_UPLOAD_DISK') ?: (env('R2_BUCKET') ? 'r2' : 'local'),
         'max_kilobytes' => (int) env('KB_UPLOAD_MAX_KB', 20480),
         'mimes' => ['pdf', 'txt', 'md', 'docx'],
         // Uncompressed size limit for a DOCX body: a small .docx can be a zip bomb.

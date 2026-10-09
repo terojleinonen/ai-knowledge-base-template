@@ -238,6 +238,14 @@ New → *Blueprint* → select this repository. `render.yaml` configures the ser
 
 On start, the container runs migrations, embeds the demo documents once, and runs the queue worker and scheduler in the background (`RUN_WORKER_IN_WEB=true`), since the free tier has no separate worker service.
 
+**Optional: durable uploads on Cloudflare R2.** The free Render instance loses its disk on every restart. Uploaded documents stay searchable, because their text and embeddings are in the database, but "Retry" can't re-read the file. R2 keeps the files, and its free tier includes 10 GB of storage. Cloudflare asks you to add an R2 subscription through a checkout first.
+
+1. Cloudflare dashboard → **Storage & databases → R2** → complete the checkout → **Create bucket** (e.g. `kb-uploads`, private).
+2. **R2 → Manage API tokens → Create API token**: permission **Object Read & Write**, limited to that bucket. Copy the access key ID, the secret and the S3 endpoint.
+3. In Render, set `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`. Uploads switch to R2 automatically, and on the next start the demo documents are re-indexed onto it once.
+
+`bin/check-demo` uploads, re-indexes (re-reading the stored file) and deletes a small file on every run.
+
 **3. Frontend: Cloudflare Pages**
 
 Connect the repository. Use root directory `frontend`, build command `npm run build`, output directory `dist`, and environment variable `VITE_API_BASE_URL=https://<service>.onrender.com/api`. `public/_redirects` handles SPA routing.
@@ -266,7 +274,7 @@ On Render (behind Cloudflare), `render.yaml` uses `KB_CLIENT_IP_HEADER=CF-Connec
 
 DOCX files are checked for zip bombs before unpacking, and the frontend sends a strict Content-Security-Policy (`frontend/public/_headers`).
 
-On free hosting, uploaded files are lost when the container restarts. Their extracted text and embeddings are in the database, so search and chat keep working; only "Retry" on those documents fails.
+Without R2, uploaded files are lost when the free container restarts. Their extracted text and embeddings are in the database, so search and chat keep working; only "Retry" on those documents fails. With R2 configured, files are kept.
 
 ### Checking the live demo
 
@@ -294,13 +302,13 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - `kb:eval`: retrieval and answer quality, citation precision, abstentions and token usage on a sample dataset
 - Chat with Claude, OpenAI or local Ollama; embeddings with OpenAI or Ollama
 - Public demo: guest accounts with sample documents, cost caps, per-visitor abuse limits, daily end-to-end check
+- Durable uploads on Cloudflare R2 (any S3-compatible storage works)
 
 ### Next
-1. **Durable file storage.** Uploads are lost when the free server restarts, so "Retry" fails for them. Store them in S3-compatible storage such as Cloudflare R2 (`KB_UPLOAD_DISK`).
-2. **Bot protection on "Try the live demo"** with Cloudflare Turnstile. IP limits stop a single abuser; Turnstile also stops distributed ones.
-3. **Hybrid search and reranking.** Combine keyword search with vector search so exact terms and numbers are found reliably, then rerank the results. Relevance scores alone don't separate good matches from bad ones (see the calibration under [Public demo mode](#public-demo-mode)).
-4. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level.
-5. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
+1. **Bot protection on "Try the live demo"** with Cloudflare Turnstile. IP limits stop a single abuser; Turnstile also stops distributed ones.
+2. **Hybrid search and reranking.** Combine keyword search with vector search so exact terms and numbers are found reliably, then rerank the results. Relevance scores alone don't separate good matches from bad ones (see the calibration under [Public demo mode](#public-demo-mode)).
+3. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level.
+4. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
 
 ### Later
 - OCR for scanned PDFs
