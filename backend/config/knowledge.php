@@ -87,6 +87,14 @@ return [
         'guest_ttl_hours' => (int) env('KB_DEMO_GUEST_TTL_HOURS', 24),
     ],
 
+    // Cloudflare Turnstile on "Try the live demo" (enabled when the secret key is set).
+    // monitor_token lets automated checks (bin/check-demo) start sessions without a browser.
+    'turnstile' => [
+        'site_key' => env('KB_TURNSTILE_SITE_KEY') ?: null,
+        'secret_key' => env('KB_TURNSTILE_SECRET_KEY') ?: null,
+        'monitor_token' => env('KB_MONITOR_TOKEN') ?: null,
+    ],
+
     'registration' => [
         'enabled' => (bool) env('KB_REGISTRATION_ENABLED', true),
     ],

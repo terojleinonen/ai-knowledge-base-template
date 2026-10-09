@@ -21,6 +21,8 @@ jobs:
     env:
       DEMO_API_URL: ${{ vars.DEMO_API_URL || 'https://knowledge-base-api-5zx1.onrender.com' }}
       DEMO_WEB_URL: ${{ vars.DEMO_WEB_URL || 'https://ai-knowledge-base-template.pages.dev' }}
+      # Lets the check start demo sessions past Turnstile (same value as KB_MONITOR_TOKEN on the API).
+      DEMO_MONITOR_TOKEN: ${{ secrets.DEMO_MONITOR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 

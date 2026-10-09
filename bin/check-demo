@@ -3,6 +3,8 @@
 
 Usage: bin/check-demo --api https://<service>.onrender.com --web https://<project>.pages.dev [--ask]
 
+With Turnstile enabled on the API, set DEMO_MONITOR_TOKEN (= the API's KB_MONITOR_TOKEN).
+
 Without --ask it costs no LLM credit: an off-topic question exercises embeddings, the
 database and the chat endpoint, but is filtered out before the chat model is called. A tiny
 upload is stored, indexed, re-indexed from storage and deleted (one small embedding call).
@@ -13,6 +15,7 @@ Exits non-zero if any check fails.
 import argparse
 import ipaddress
 import json
+import os
 import re
 import sys
 import time
@@ -125,7 +128,9 @@ def main():
     check("API sees visitors' real IPs", public, f"sees {seen or body[:80]}")
 
     # 5. Guest session with the sample documents.
-    status, _, body = request("POST", f"{api}/api/auth/guest", headers={"Origin": web})
+    # With Turnstile enabled, automated checks identify themselves with the monitor token.
+    monitor = {"X-Monitor-Token": os.environ["DEMO_MONITOR_TOKEN"]} if os.environ.get("DEMO_MONITOR_TOKEN") else {}
+    status, _, body = request("POST", f"{api}/api/auth/guest", headers={"Origin": web, **monitor})
     token = json.loads(body).get("token") if status == 201 else None
     if not check("guest session created", bool(token), f"HTTP {status}"):
         return

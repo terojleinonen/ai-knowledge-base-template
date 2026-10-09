@@ -11,6 +11,7 @@ export interface User {
 export interface AppConfig {
   demo: boolean
   registration: boolean
+  turnstile_site_key: string | null
   limits: {
     questions_per_user_per_day: number | null
     questions_per_day: number | null

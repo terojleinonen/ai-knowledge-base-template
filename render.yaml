@@ -92,6 +92,13 @@ services:
         value: "150"           # stored passages per account (~1.4 MB of database each); demo docs use 6
       # Visitor IP behind Render's Cloudflare edge. Verified: Cloudflare rejects requests that
       # try to set CF-Connecting-IP themselves, so visitors can't forge it. (X-Forwarded-For can be.)
+      # Bot protection on "Try the live demo" (Cloudflare Turnstile; on once the secret key is set).
+      - key: KB_TURNSTILE_SITE_KEY
+        sync: false
+      - key: KB_TURNSTILE_SECRET_KEY
+        sync: false
+      - key: KB_MONITOR_TOKEN    # lets bin/check-demo start sessions; also a GitHub secret DEMO_MONITOR_TOKEN
+        sync: false
       - key: KB_CLIENT_IP_HEADER
         value: CF-Connecting-IP
       - key: KB_LIMIT_GUESTS_PER_IP_PER_HOUR

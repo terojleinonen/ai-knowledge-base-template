@@ -55,6 +55,9 @@
         <env name="TRUSTED_PROXIES" value="" force="true"/>
         <env name="KB_UPLOAD_DISK" value="local" force="true"/>
         <env name="R2_BUCKET" value="" force="true"/>
+        <env name="KB_TURNSTILE_SITE_KEY" value="" force="true"/>
+        <env name="KB_TURNSTILE_SECRET_KEY" value="" force="true"/>
+        <env name="KB_MONITOR_TOKEN" value="" force="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

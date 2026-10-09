@@ -1,7 +1,7 @@
 import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router'
-import { vi } from 'vitest'
+import { afterEach, beforeEach, describe, vi } from 'vitest'
 import { tokenStore } from '../lib/api'
 import { mockApi, renderApp } from '../test/utils'
 import { LandingPage } from './LandingPage'
@@ -10,6 +10,7 @@ const config = (overrides = {}) => ({
   demo: true,
   registration: false,
   limits: { questions_per_user_per_day: 15, questions_per_day: 150, documents_per_user: 6 },
+  turnstile_site_key: null,
   ...overrides,
 })
 
@@ -86,4 +87,79 @@ it('explains the wait while a sleeping server wakes up', async () => {
   await act(async () => release?.())
   expect(await screen.findByRole('alert')).toHaveTextContent('Server error')
   vi.useRealTimers()
+})
+
+describe('with Turnstile bot protection', () => {
+  let callbacks: Record<string, (token?: string) => void> = {}
+  const turnstile = {
+    render: vi.fn((_el: HTMLElement, options: Record<string, unknown>) => {
+      callbacks = options as typeof callbacks
+      return 'widget-1'
+    }),
+    reset: vi.fn(),
+    remove: vi.fn(),
+  }
+
+  beforeEach(() => {
+    callbacks = {}
+    turnstile.render.mockClear()
+    turnstile.reset.mockClear()
+    window.turnstile = turnstile
+  })
+  afterEach(() => {
+    delete window.turnstile
+  })
+
+  it('waits for the check, then sends its token when starting the demo', async () => {
+    const fetchMock = mockApi((url, init) => {
+      if (url.endsWith('/config')) return { body: config({ turnstile_site_key: 'site-key' }) }
+      if (url.endsWith('/auth/guest') && init.method === 'POST') {
+        return { status: 201, body: { token: 'guest-token', user: { id: 9, name: 'Guest', email: 'g@kb-demo.invalid', is_guest: true } } }
+      }
+      return undefined
+    })
+
+    renderLanding()
+    const button = await screen.findByRole('button', { name: 'Checking your browser…' })
+    expect(button).toBeDisabled()
+    expect(turnstile.render).toHaveBeenCalledWith(expect.any(HTMLElement), expect.objectContaining({ sitekey: 'site-key', action: 'guest', appearance: 'interaction-only' }))
+
+    act(() => callbacks.callback('turnstile-token'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Try the live demo' }))
+
+    expect(await screen.findByText('Chat screen')).toBeInTheDocument()
+    const [, init] = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/auth/guest'))!
+    expect(JSON.parse(init!.body as string)).toEqual({ turnstile_token: 'turnstile-token' })
+  })
+
+  it('shows a failed check and fetches a fresh token', async () => {
+    mockApi((url) => {
+      if (url.endsWith('/config')) return { body: config({ turnstile_site_key: 'site-key' }) }
+      if (url.endsWith('/auth/guest')) {
+        return { status: 422, body: { message: 'Invalid', errors: { turnstile_token: ['Please complete the human check and try again.'] } } }
+      }
+      return undefined
+    })
+
+    renderLanding()
+    await screen.findByRole('button', { name: 'Checking your browser…' })
+    act(() => callbacks.callback('spent-token'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Try the live demo' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Please complete the human check and try again.')
+    expect(turnstile.reset).toHaveBeenCalledWith('widget-1')
+    expect(screen.getByRole('button', { name: 'Checking your browser…' })).toBeDisabled() // waits for the new token
+  })
+
+  it('clears a widget error once Turnstile recovers on its own', async () => {
+    mockApi((url) => (url.endsWith('/config') ? { body: config({ turnstile_site_key: 'site-key' }) } : undefined))
+
+    renderLanding()
+    await screen.findByRole('button', { name: 'Checking your browser…' })
+    act(() => callbacks['error-callback']())
+    expect(await screen.findByRole('alert')).toHaveTextContent('The human check failed to load')
+
+    act(() => callbacks.callback('fresh-token'))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
 })
