@@ -109,6 +109,9 @@ return [
         // Per-visitor (IP) limits: only enable once the visitor IP is resolved correctly behind
         // your proxy (TRUSTED_PROXIES / KB_CLIENT_IP_HEADER), or every visitor shares one limit.
         'guests_per_ip_per_hour' => filled(env('KB_LIMIT_GUESTS_PER_IP_PER_HOUR')) ? (int) env('KB_LIMIT_GUESTS_PER_IP_PER_HOUR') : null,
+        // Total size of stored upload files, in MB, across all accounts (shared files counted once).
+        // Keeps object storage within a free tier, e.g. 5000 for half of Cloudflare R2's 10 GB.
+        'storage_mb' => filled(env('KB_LIMIT_STORAGE_MB')) ? (int) env('KB_LIMIT_STORAGE_MB') : null,
         // Stored passages per account: bounds database growth from uploads (a 2 MB text file is ~2,000).
         'chunks_per_user' => filled(env('KB_LIMIT_CHUNKS_PER_USER')) ? (int) env('KB_LIMIT_CHUNKS_PER_USER') : null,
         'questions_per_day' => filled(env('KB_LIMIT_QUESTIONS_PER_DAY')) ? (int) env('KB_LIMIT_QUESTIONS_PER_DAY') : null,

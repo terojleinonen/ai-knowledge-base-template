@@ -244,7 +244,9 @@ On start, the container runs migrations, embeds the demo documents once, and run
 2. **R2 → Manage API tokens → Create API token**: permission **Object Read & Write**, limited to that bucket. Copy the access key ID, the secret and the S3 endpoint.
 3. In Render, set `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`. Uploads switch to R2 automatically, and on the next start the demo documents are re-indexed onto it once.
 
-`bin/check-demo` uploads, re-indexes (re-reading the stored file) and deletes a small file on every run.
+`bin/check-demo` uploads, re-indexes (re-reading the stored file) and deletes a small file on every run, so a full quota also makes the daily check fail.
+
+R2 has no spending cap of its own. `KB_LIMIT_STORAGE_MB` keeps the app below the free tier, and with today's limits the worst case is about 2–4 GB stored and ~27,000 writes a month (free: 10 GB, 1 million). As a safety net, add a Cloudflare **budget alert** (Manage Account → Billing → Billable Usage → Create budget alert, e.g. $1). It emails you the day after paid usage starts, but doesn't stop it. Keep the R2 key secret: it can only reach its own bucket, but within it, it isn't limited.
 
 **3. Frontend: Cloudflare Pages**
 
@@ -264,6 +266,7 @@ Abuse limits keep a public demo up and its database small. Neon's free tier has 
 
 | Setting | Demo value | Protects against |
 |---|---|---|
+| `KB_LIMIT_STORAGE_MB` | 5000 | Storage beyond R2's 10 GB free tier: uploads are refused (HTTP 507) once stored files would exceed the quota. Files are counted from the database, shared demo files once. |
 | `KB_LIMIT_CHUNKS_PER_USER` | 150 | One visitor filling the database; checked *before* embedding |
 | `KB_LIMIT_GUESTS_PER_DAY` | 150 | Unlimited guest accounts |
 | `KB_LIMIT_GUESTS_PER_IP_PER_HOUR`, `KB_LIMIT_QUESTIONS_PER_IP` | 10 / 30 | One visitor using up the daily caps |
