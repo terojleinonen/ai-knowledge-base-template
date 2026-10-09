@@ -30,9 +30,13 @@ ENV APP_ENV=production APP_DEBUG=false LOG_CHANNEL=stderr SERVER_NAME=:8080
 
 COPY --from=vendor /app /app
 
+# Also make Caddy's data/config dirs (XDG_DATA_HOME=/data, XDG_CONFIG_HOME=/config in the base
+# image) writable for www-data; otherwise Caddy logs "permission denied" errors at every start.
 RUN php artisan package:discover --ansi \
     && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/app/private \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && mkdir -p /data/caddy /config/caddy \
+    && chown -R www-data:www-data /data /config
 
 USER www-data
 EXPOSE 8080

@@ -128,6 +128,9 @@ jobs:
           echo "$procs" | grep -q 'queue:work'
           echo "$procs" | grep -q 'schedule:work'
 
+          # No permission problems at start (e.g. Caddy's /data and /config dirs).
+          if docker logs kb 2>&1 | grep -i 'permission denied'; then echo "permission errors in container logs"; exit 1; fi
+
       - name: Container logs
         if: always()
         run: docker logs kb 2>&1 | tail -50 || true
