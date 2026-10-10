@@ -213,6 +213,62 @@
     {
       "question": "Do we use Okta for single sign-on?",
       "unanswerable": true
+    },
+    {
+      "question": "What is the dress code?",
+      "unanswerable": true
+    },
+    {
+      "question": "How do I book a meeting room?",
+      "unanswerable": true
+    },
+    {
+      "question": "What is the bonus scheme?",
+      "unanswerable": true
+    },
+    {
+      "question": "Can I bring my dog to the office?",
+      "unanswerable": true
+    },
+    {
+      "question": "How much is the Aurora Node discount for bulk orders?",
+      "unanswerable": true
+    },
+    {
+      "question": "What is the Aurora Gateway's power consumption?",
+      "unanswerable": true
+    },
+    {
+      "question": "Is there a gym membership benefit?",
+      "unanswerable": true
+    },
+    {
+      "question": "How often are performance reviews held?",
+      "unanswerable": true
+    },
+    {
+      "question": "What VPN do we use?",
+      "unanswerable": true
+    },
+    {
+      "question": "Who won the World Cup?",
+      "unanswerable": true
+    },
+    {
+      "question": "What is the weather in Helsinki?",
+      "unanswerable": true
+    },
+    {
+      "question": "Does the Aurora Node support Zigbee?",
+      "unanswerable": true
+    },
+    {
+      "question": "What is the overtime compensation?",
+      "unanswerable": true
+    },
+    {
+      "question": "How do I expense a taxi?",
+      "unanswerable": true
     }
   ]
 }

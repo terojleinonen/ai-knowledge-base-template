@@ -145,7 +145,7 @@ All settings are in `backend/config/knowledge.php` and can be overridden via env
 | `KB_RETRIEVAL_TOP_K` / `KB_RETRIEVAL_MIN_SCORE` | `6` / `0.2` | Retrieval |
 | `KB_RETRIEVAL_MODE` | `hybrid` | `hybrid` (vector + keyword) or `vector` |
 | `KB_RERANK_PROVIDER` / `KB_RERANK_MODEL` | off | Optional reranker, e.g. `jina` / `jina-reranker-v2-base-multilingual` (needs `JINA_API_KEY`) |
-| `KB_RERANK_MIN_SCORE` | none | Drop passages the reranker scores below this; unset = reorder only |
+| `KB_RERANK_MIN_SCORE` | none | Drop passages the reranker scores below this; unset = reorder only (demo: `0.12`) |
 | `KB_UPLOAD_MAX_KB` | `20480` | Max upload size |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Frontend origin(s) |
 | `SANCTUM_TOKEN_EXPIRATION` | `43200` (30 days) | API token lifetime, in minutes |
@@ -267,6 +267,8 @@ Connect the repository. Use root directory `frontend`, build command `npm run bu
 
 The relevance cutoff `KB_RETRIEVAL_MIN_SCORE=0.2` was calibrated for `text-embedding-3-small` on the sample documents plus 15 unanswerable questions. Answerable questions scored 0.29–0.61, plausible but uncovered ones ("What is the dress code?") 0.20–0.57, and unrelated ones ("Who won the World Cup?") at most 0.12. So the cutoff filters out unrelated questions before any model call, and the model handles the rest. Recalibrate with `kb:eval --retrieval-only` (and `KB_RETRIEVAL_MIN_SCORE=0`) when you change embedding models: the same questions score much higher with `nomic-embed-text`.
 
+The demo also uses Jina's reranker, whose scores separate covered from uncovered questions far better. On the 35 sample cases, the best passage for every answerable question scored 0.16–0.72, while 14 of 19 unanswerable questions scored at most 0.09. With `KB_RERANK_MIN_SCORE=0.12`, those 14 (74%) are answered without any model call and every answerable question still finds its documents. The other five are about the right product but ask for missing details ("Does the Aurora Node support Zigbee?", 0.41), so the model declines them. The gap is narrow (0.09 vs 0.16) and the set is small, so recalibrate after adding documents. A question uses about 2,000–3,500 reranker tokens. When Jina's free tokens run out, search continues without reranking and the vector cutoff applies again.
+
 Abuse limits keep a public demo up and its database small. Neon's free tier has 0.5 GB, and a 2 MB text upload alone becomes about 2,000 passages (~19 MB):
 
 | Setting | Demo value | Protects against |
@@ -314,12 +316,11 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - Public demo: guest accounts with sample documents, cost caps, per-visitor abuse limits, daily end-to-end check
 - Durable uploads on Cloudflare R2 (any S3-compatible storage works)
 - Bot protection with Cloudflare Turnstile
-- Hybrid search (vector + BM25 keyword) with an optional reranker
+- Hybrid search (vector + BM25 keyword) with a reranker whose cutoff turns away 74% of uncovered questions before any model call
 
 ### Next
-1. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level. The sample set is too small to show what hybrid search and reranking gain: vector search alone already ranks every case correctly.
-2. **Calibrated reranker cutoff.** Use reranker scores to turn away uncovered questions before any model call, which vector scores can't do reliably.
-3. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
+1. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level. The sample set is too small to show what hybrid search gains in ranking: vector search alone already ranks every case correctly.
+2. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
 
 ### Later
 - OCR for scanned PDFs
@@ -330,5 +331,5 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 ### Known limitations
 - On free hosting, the first request after 15 idle minutes takes up to a minute while the server wakes up.
 - Citation checking matches words, not meaning: a reworded fact is left uncited rather than guessed.
-- Turning away unrelated questions relies mainly on the model, because relevance scores overlap.
+- Questions about the right topic but a missing detail still reach the model, which declines them; only clearly uncovered questions are filtered by retrieval.
 - PDFs with hard-wrapped text lines can split words ("Eac h"), which keyword search then misses; vector search still finds the passage.
