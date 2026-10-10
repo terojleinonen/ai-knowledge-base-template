@@ -1,0 +1,1259 @@
+{
+  "name": "Northwind wiki",
+  "documents": [
+    "employee-handbook-2026.md",
+    "employee-handbook-2024.txt",
+    "security-policy.docx",
+    "aurora-manual.pdf",
+    "aurora-release-notes.md",
+    "aurora-cloud-api.md",
+    "travel-and-expense-policy.docx",
+    "it-helpdesk-faq.txt",
+    "incident-postmortem-2026-03-14.md",
+    "office-guide.md",
+    "product-meeting-notes-2026.md"
+  ],
+  "cases": [
+    {
+      "question": "How many days per week can I work remotely?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        [
+          "three",
+          "3"
+        ]
+      ],
+      "evidence": [
+        "You may work remotely up to three days per week"
+      ],
+      "tags": [
+        "outdated"
+      ]
+    },
+    {
+      "question": "How many vacation days can be carried over to the next vacation year?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "15"
+      ],
+      "evidence": [
+        "up to a maximum of 15 days"
+      ],
+      "tags": [
+        "outdated"
+      ]
+    },
+    {
+      "question": "From which day of sickness do I need a doctor's certificate?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        [
+          "sixth",
+          "6th",
+          "day 6"
+        ]
+      ],
+      "evidence": [
+        "required from the sixth day onwards"
+      ],
+      "tags": [
+        "outdated"
+      ]
+    },
+    {
+      "question": "For how many weeks of parental leave does Northwind pay full salary?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "12"
+      ],
+      "evidence": [
+        "full salary for the first 12 weeks of parental leave"
+      ],
+      "tags": [
+        "outdated"
+      ]
+    },
+    {
+      "question": "What is the annual learning budget?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        [
+          "2,000",
+          "2000"
+        ]
+      ],
+      "evidence": [
+        "annual learning budget of 2,000 euros"
+      ],
+      "tags": [
+        "outdated"
+      ]
+    },
+    {
+      "question": "How is overtime compensated?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "1.5",
+        [
+          "time off"
+        ]
+      ],
+      "evidence": [
+        "each overtime hour earns 1.5 hours of time off"
+      ],
+      "tags": [
+        "outdated"
+      ]
+    },
+    {
+      "question": "When are development reviews held?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "March",
+        "September"
+      ],
+      "evidence": [
+        "twice a year, in March and in September"
+      ],
+      "tags": [
+        "outdated"
+      ]
+    },
+    {
+      "question": "How big is the target bonus?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        [
+          "8 percent",
+          "8%",
+          "8 %"
+        ]
+      ],
+      "evidence": [
+        "The target bonus is 8 percent of annual base salary"
+      ],
+      "tags": [
+        "outdated",
+        "numbers"
+      ]
+    },
+    {
+      "question": "How much is the lunch benefit in Finland?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "12.75"
+      ],
+      "evidence": [
+        "12.75 euros per working day"
+      ],
+      "tags": [
+        "outdated",
+        "numbers"
+      ]
+    },
+    {
+      "question": "I'd like to work from my family's place in Spain for six weeks. Is that OK?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "30"
+      ],
+      "evidence": [
+        "in periods of at most 30 consecutive days"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "My kid has the flu. Can I stay home?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        [
+          "four",
+          "4"
+        ]
+      ],
+      "evidence": [
+        "stay at home for up to four days per illness"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "Do we get anything towards a gym membership?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "400"
+      ],
+      "evidence": [
+        "sports and culture benefit of 400 euros per year"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "Who pays for my home internet?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "40"
+      ],
+      "evidence": [
+        "Home internet is reimbursed up to 40 euros per month"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "Can I do freelance work on the side?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        [
+          "manager"
+        ]
+      ],
+      "evidence": [
+        "Side jobs are allowed if they do not compete"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "Where should I keep encryption keys?",
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [
+        "1Password",
+        [
+          "Secrets Manager"
+        ]
+      ],
+      "evidence": [
+        "only stored in 1Password or in AWS Secrets Manager"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "Can I paste customer data into an AI chatbot?",
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [],
+      "evidence": [
+        "only with AI tools listed as approved for Confidential data"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "We run a hospital ward around the clock. What should we do about CO2 calibration?",
+      "expect_documents": [
+        "aurora-manual"
+      ],
+      "facts": [
+        [
+          "once a year",
+          "annually",
+          "yearly"
+        ]
+      ],
+      "evidence": [
+        "calibrate the sensor manually once a year"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "Can the Aurora Node be installed outdoors?",
+      "expect_documents": [
+        "aurora-manual"
+      ],
+      "facts": [],
+      "evidence": [
+        "it must not be installed outdoors"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "Can I fly from Tampere to Helsinki for a meeting?",
+      "expect_documents": [
+        "travel-and-expense-policy"
+      ],
+      "facts": [
+        [
+          "train"
+        ]
+      ],
+      "evidence": [
+        "take the train when the journey takes less than 4 hours"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "I got a parking fine on a work trip. Will it be reimbursed?",
+      "expect_documents": [
+        "travel-and-expense-policy"
+      ],
+      "facts": [],
+      "evidence": [
+        "Fines (including parking and speeding fines)"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "Can I bring my dog to work?",
+      "expect_documents": [
+        "office-guide"
+      ],
+      "facts": [
+        "Helsinki",
+        "Friday"
+      ],
+      "evidence": [
+        "Dogs are welcome at the Helsinki office on Fridays"
+      ],
+      "tags": [
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "What is the daily allowance for a work trip to Italy?",
+      "expect_documents": [
+        "travel-and-expense-policy"
+      ],
+      "facts": [
+        [
+          "Finnish Tax Administration",
+          "Tax Administration"
+        ]
+      ],
+      "evidence": [
+        "For countries not listed"
+      ],
+      "tags": [
+        "paraphrase",
+        "table"
+      ]
+    },
+    {
+      "question": "How much is the on-call compensation?",
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "350"
+      ],
+      "evidence": [
+        "The on-call compensation is 350 euros per week"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "Which password manager do we use, and how long must passwords be?",
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [
+        "1Password",
+        "16"
+      ],
+      "evidence": [
+        "The approved password manager is 1Password",
+        "at least 16 characters long"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "Can I use SMS codes as a second factor?",
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [],
+      "evidence": [
+        "SMS codes are not accepted as a second factor"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "Who has to approve exceptions to the security policy?",
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [
+        "Mikko Laine"
+      ],
+      "evidence": [
+        "approved in writing by the Head of Security, Mikko Laine"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "How quickly must a personal data breach be reported to the authority?",
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [
+        "72 hours"
+      ],
+      "evidence": [
+        "reported to the data protection authority within 72 hours"
+      ],
+      "tags": [
+        "lookup",
+        "numbers"
+      ]
+    },
+    {
+      "question": "How high should Aurora Nodes be mounted?",
+      "expect_documents": [
+        "aurora-manual"
+      ],
+      "facts": [
+        "1.2",
+        "1.8"
+      ],
+      "evidence": [
+        "at a height of 1.2 to 1.8 metres"
+      ],
+      "tags": [
+        "lookup",
+        "numbers"
+      ]
+    },
+    {
+      "question": "Can I use rechargeable batteries in an Aurora Node?",
+      "expect_documents": [
+        "aurora-manual"
+      ],
+      "facts": [],
+      "evidence": [
+        "Alkaline and rechargeable batteries must not be used"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "What does the Node Plus measure in addition to the standard Node?",
+      "expect_documents": [
+        "aurora-manual"
+      ],
+      "facts": [
+        [
+          "VOC",
+          "volatile organic"
+        ],
+        [
+          "pressure"
+        ]
+      ],
+      "evidence": [
+        "volatile organic compounds (VOC) and air pressure"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "What is the API rate limit?",
+      "expect_documents": [
+        "aurora-cloud-api"
+      ],
+      "facts": [
+        "600"
+      ],
+      "evidence": [
+        "600 requests per minute per organisation"
+      ],
+      "tags": [
+        "lookup",
+        "numbers"
+      ]
+    },
+    {
+      "question": "How long are raw readings available through the API?",
+      "expect_documents": [
+        "aurora-cloud-api"
+      ],
+      "facts": [
+        "90 days"
+      ],
+      "evidence": [
+        "Raw readings are available for 90 days"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "How much mileage can I claim for driving my own car in Finland?",
+      "expect_documents": [
+        "travel-and-expense-policy"
+      ],
+      "facts": [
+        "0.59"
+      ],
+      "evidence": [
+        "0.59 euros per kilometre in Finland"
+      ],
+      "tags": [
+        "lookup",
+        "numbers"
+      ]
+    },
+    {
+      "question": "When can I take a taxi regardless of public transport?",
+      "expect_documents": [
+        "travel-and-expense-policy"
+      ],
+      "facts": [
+        "23:00"
+      ],
+      "evidence": [
+        "always between 23:00 and 06:00"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "My laptop broke. How quickly do I get a loaner in Berlin?",
+      "expect_documents": [
+        "it-helpdesk-faq"
+      ],
+      "facts": [
+        [
+          "two working days",
+          "2 working days"
+        ]
+      ],
+      "evidence": [
+        "within two working days in Berlin"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "How long can deleted Google Drive files be recovered?",
+      "expect_documents": [
+        "it-helpdesk-faq"
+      ],
+      "facts": [
+        "30 days",
+        "25"
+      ],
+      "evidence": [
+        "Files in the trash are kept for 30 days"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "How do I book a meeting room?",
+      "expect_documents": [
+        "it-helpdesk-faq"
+      ],
+      "facts": [
+        [
+          "Google Calendar"
+        ]
+      ],
+      "evidence": [
+        "Book rooms in Google Calendar"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "Is there parking at the Tampere office?",
+      "expect_documents": [
+        "office-guide"
+      ],
+      "facts": [
+        "12"
+      ],
+      "evidence": [
+        "12 parking spaces"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "What caused the gateway outage in March 2026?",
+      "expect_documents": [
+        "incident-postmortem-2026-03-14"
+      ],
+      "facts": [
+        [
+          "certificate"
+        ]
+      ],
+      "evidence": [
+        "expired on 14 March 2026 at 06:00 UTC"
+      ],
+      "tags": [
+        "lookup"
+      ]
+    },
+    {
+      "question": "How many gateways were affected by the March 2026 outage, and for how long?",
+      "expect_documents": [
+        "incident-postmortem-2026-03-14"
+      ],
+      "facts": [
+        [
+          "1,240",
+          "1240"
+        ],
+        [
+          "3 hours and 20 minutes",
+          "3 hours 20 minutes",
+          "3h 20",
+          "3 h 20"
+        ]
+      ],
+      "evidence": [
+        "about 1,240 Aurora Gateways"
+      ],
+      "tags": [
+        "lookup",
+        "numbers"
+      ]
+    },
+    {
+      "question": "What does a node LED blinking amber mean?",
+      "expect_documents": [
+        "aurora-manual"
+      ],
+      "facts": [
+        [
+          "battery"
+        ]
+      ],
+      "evidence": [
+        "Blinking amber every 10 seconds: battery low"
+      ],
+      "tags": [
+        "exact-term",
+        "table"
+      ]
+    },
+    {
+      "question": "What does solid amber mean on the gateway?",
+      "expect_documents": [
+        "aurora-manual"
+      ],
+      "facts": [
+        [
+          "no internet",
+          "internet connection"
+        ]
+      ],
+      "evidence": [
+        "Solid amber: no internet connection"
+      ],
+      "tags": [
+        "exact-term",
+        "table"
+      ]
+    },
+    {
+      "question": "Which ports does the gateway need?",
+      "expect_documents": [
+        "aurora-manual"
+      ],
+      "facts": [
+        "443",
+        "123"
+      ],
+      "evidence": [
+        "outbound access to TCP port 443 (HTTPS) and UDP port 123 (NTP)"
+      ],
+      "tags": [
+        "exact-term"
+      ]
+    },
+    {
+      "question": "What does the error code firmware_too_old mean?",
+      "expect_documents": [
+        "aurora-cloud-api"
+      ],
+      "facts": [
+        [
+          "firmware"
+        ]
+      ],
+      "evidence": [
+        "The node's firmware does not support this setting"
+      ],
+      "tags": [
+        "exact-term"
+      ]
+    },
+    {
+      "question": "How do I check that a webhook really came from Aurora?",
+      "expect_documents": [
+        "aurora-cloud-api"
+      ],
+      "facts": [
+        "X-Aurora-Signature",
+        "HMAC"
+      ],
+      "evidence": [
+        "X-Aurora-Signature"
+      ],
+      "tags": [
+        "exact-term"
+      ]
+    },
+    {
+      "question": "What is the maximum page size for list endpoints?",
+      "expect_documents": [
+        "aurora-cloud-api"
+      ],
+      "facts": [
+        "1000"
+      ],
+      "evidence": [
+        "maximum 1000"
+      ],
+      "tags": [
+        "exact-term",
+        "numbers"
+      ]
+    },
+    {
+      "question": "What is the daily allowance in Stockholm?",
+      "expect_documents": [
+        "travel-and-expense-policy"
+      ],
+      "facts": [
+        "64"
+      ],
+      "evidence": [
+        "Sweden (Stockholm): daily allowance 64 euros"
+      ],
+      "tags": [
+        "table"
+      ]
+    },
+    {
+      "question": "What is the hotel limit in London?",
+      "expect_documents": [
+        "travel-and-expense-policy"
+      ],
+      "facts": [
+        "260"
+      ],
+      "evidence": [
+        "London): daily allowance 76 euros; hotel limit 260"
+      ],
+      "tags": [
+        "table"
+      ]
+    },
+    {
+      "question": "In which firmware version did battery life go from 3 to 5 years?",
+      "expect_documents": [
+        "aurora-release-notes"
+      ],
+      "facts": [
+        [
+          "3.0.0",
+          "3.0"
+        ]
+      ],
+      "evidence": [
+        "increased from 3 years to 5 years"
+      ],
+      "tags": [
+        "needle",
+        "exact-term"
+      ]
+    },
+    {
+      "question": "When was firmware 3.3.1 released, and what did it fix?",
+      "expect_documents": [
+        "aurora-release-notes"
+      ],
+      "facts": [
+        [
+          "2026-03-16",
+          "16 March 2026",
+          "March 16, 2026"
+        ],
+        [
+          "certificate"
+        ]
+      ],
+      "evidence": [
+        "did not renew their TLS client certificate automatically"
+      ],
+      "tags": [
+        "needle"
+      ]
+    },
+    {
+      "question": "Which firmware version removed HTTP proxy support?",
+      "expect_documents": [
+        "aurora-release-notes"
+      ],
+      "facts": [
+        [
+          "3.0.0",
+          "3.0"
+        ]
+      ],
+      "evidence": [
+        "HTTP proxy support on the gateway was removed"
+      ],
+      "tags": [
+        "needle"
+      ]
+    },
+    {
+      "question": "How many nodes could one gateway handle before firmware 2.0?",
+      "expect_documents": [
+        "aurora-release-notes"
+      ],
+      "facts": [
+        "100"
+      ],
+      "evidence": [
+        [
+          "up to 100 nodes",
+          "previously 100"
+        ]
+      ],
+      "tags": [
+        "needle",
+        "numbers"
+      ]
+    },
+    {
+      "question": "How long is an export download link valid?",
+      "expect_documents": [
+        "aurora-cloud-api"
+      ],
+      "facts": [
+        "24 hours"
+      ],
+      "evidence": [
+        "valid for 24 hours"
+      ],
+      "tags": [
+        "needle"
+      ]
+    },
+    {
+      "question": "What is the list price of the Aurora Node Plus?",
+      "expect_documents": [
+        "product-meeting-notes-2026"
+      ],
+      "facts": [
+        "189"
+      ],
+      "evidence": [
+        "list price of the Aurora Node Plus is set at 189 euros"
+      ],
+      "tags": [
+        "needle"
+      ]
+    },
+    {
+      "question": "What is the codename of the new small sensor, and when will it launch?",
+      "expect_documents": [
+        "product-meeting-notes-2026"
+      ],
+      "facts": [
+        "Firefly",
+        "2027"
+      ],
+      "evidence": [
+        "the new small sensor gets the codename Firefly"
+      ],
+      "tags": [
+        "needle"
+      ]
+    },
+    {
+      "question": "Is the Aurora Cloud subscription price changing?",
+      "expect_documents": [
+        "product-meeting-notes-2026"
+      ],
+      "facts": [
+        "2.50",
+        "2027"
+      ],
+      "evidence": [
+        "rises from 2.00 to 2.50 euros per node per month"
+      ],
+      "tags": [
+        "needle"
+      ]
+    },
+    {
+      "question": "Until when are gateways on firmware 2.x supported?",
+      "expect_documents": [
+        "product-meeting-notes-2026"
+      ],
+      "facts": [
+        [
+          "31 December 2026",
+          "December 31, 2026",
+          "2026-12-31"
+        ]
+      ],
+      "evidence": [
+        "support for gateways running firmware 2.x ends on 31 December 2026"
+      ],
+      "tags": [
+        "needle"
+      ]
+    },
+    {
+      "question": "How long does a gateway keep readings when the internet connection is down?",
+      "expect_documents": [
+        "aurora-manual",
+        "aurora-release-notes",
+        "incident-postmortem-2026-03-14"
+      ],
+      "facts": [
+        "72"
+      ],
+      "evidence": [
+        "72 hours"
+      ],
+      "tags": [
+        "multi-doc"
+      ]
+    },
+    {
+      "question": "How long do node batteries last with a 30-second reporting interval?",
+      "expect_documents": [
+        "aurora-manual",
+        "aurora-release-notes"
+      ],
+      "facts": [
+        "2.5"
+      ],
+      "evidence": [
+        "the expected battery life is about 2.5 years"
+      ],
+      "tags": [
+        "multi-doc",
+        "numbers"
+      ]
+    },
+    {
+      "question": "How many hops can a mesh message travel?",
+      "expect_documents": [
+        "aurora-manual",
+        "aurora-release-notes"
+      ],
+      "facts": [
+        "6"
+      ],
+      "evidence": [
+        "6 hops"
+      ],
+      "tags": [
+        "multi-doc",
+        "outdated"
+      ]
+    },
+    {
+      "question": "Can firmware security updates be postponed?",
+      "expect_documents": [
+        "aurora-manual",
+        "aurora-release-notes"
+      ],
+      "facts": [],
+      "evidence": [
+        [
+          "security updates cannot be postponed",
+          "Security updates can no longer be postponed"
+        ]
+      ],
+      "tags": [
+        "multi-doc"
+      ]
+    },
+    {
+      "question": "Which firmware version fixed the problem behind the March 2026 outage?",
+      "expect_documents": [
+        "incident-postmortem-2026-03-14",
+        "aurora-release-notes"
+      ],
+      "facts": [
+        "3.3.1"
+      ],
+      "evidence": [
+        [
+          "Firmware 3.3.1 renews client certificates",
+          "which caused the outage of 14 March 2026"
+        ]
+      ],
+      "tags": [
+        "multi-doc"
+      ]
+    },
+    {
+      "question": "Can I set a node's temperature offset through the API, and what firmware does it need?",
+      "expect_documents": [
+        "aurora-cloud-api",
+        "aurora-manual",
+        "aurora-release-notes"
+      ],
+      "facts": [
+        [
+          "temperature_offset"
+        ],
+        [
+          "3.4.0",
+          "3.4"
+        ]
+      ],
+      "evidence": [
+        "require firmware 3.4.0 or later"
+      ],
+      "tags": [
+        "multi-doc",
+        "exact-term"
+      ]
+    },
+    {
+      "question": "Which day should I be at the Berlin office?",
+      "expect_documents": [
+        "employee-handbook-2026",
+        "office-guide"
+      ],
+      "facts": [
+        "Thursday"
+      ],
+      "evidence": [
+        [
+          "in Berlin it is Thursday",
+          "The Berlin team's office day is Thursday"
+        ]
+      ],
+      "tags": [
+        "multi-doc"
+      ]
+    },
+    {
+      "question": "How long do I have to submit an expense claim?",
+      "expect_documents": [
+        "travel-and-expense-policy",
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        "30"
+      ],
+      "evidence": [
+        [
+          "within 30 days of the expense",
+          "submit expenses in Personio within 30 days"
+        ]
+      ],
+      "tags": [
+        "multi-doc"
+      ]
+    },
+    {
+      "question": "How do I find out the guest Wi-Fi password?",
+      "expect_documents": [
+        "security-policy",
+        "it-helpdesk-faq"
+      ],
+      "facts": [
+        [
+          "reception"
+        ]
+      ],
+      "evidence": [
+        "the guest password changes every Monday"
+      ],
+      "tags": [
+        "multi-doc",
+        "paraphrase"
+      ]
+    },
+    {
+      "question": "And how much does it cost?",
+      "after": [
+        "What does the Node Plus measure in addition to the standard Node?"
+      ],
+      "expect_documents": [
+        "product-meeting-notes-2026"
+      ],
+      "facts": [
+        "189"
+      ],
+      "evidence": [
+        "list price of the Aurora Node Plus is set at 189 euros"
+      ],
+      "tags": [
+        "follow-up",
+        "needle"
+      ]
+    },
+    {
+      "question": "And the hotel limit there?",
+      "after": [
+        "What is the daily allowance in Stockholm?"
+      ],
+      "expect_documents": [
+        "travel-and-expense-policy"
+      ],
+      "facts": [
+        "210"
+      ],
+      "evidence": [
+        "Stockholm): daily allowance 64 euros; hotel limit 210"
+      ],
+      "tags": [
+        "follow-up",
+        "table"
+      ]
+    },
+    {
+      "question": "When does that year start?",
+      "after": [
+        "How many vacation days do full-time employees get per year?"
+      ],
+      "expect_documents": [
+        "employee-handbook-2026"
+      ],
+      "facts": [
+        [
+          "1 April",
+          "April 1"
+        ]
+      ],
+      "evidence": [
+        "The vacation year runs from 1 April to 31 March"
+      ],
+      "tags": [
+        "follow-up"
+      ]
+    },
+    {
+      "question": "What is the IP rating of the Aurora Gateway?",
+      "unanswerable": true,
+      "tags": [
+        "near-miss"
+      ]
+    },
+    {
+      "question": "How much does the Aurora Gateway cost?",
+      "unanswerable": true,
+      "tags": [
+        "near-miss"
+      ]
+    },
+    {
+      "question": "How long does the Firefly's battery last?",
+      "unanswerable": true,
+      "tags": [
+        "near-miss"
+      ]
+    },
+    {
+      "question": "What time does the Berlin office open in the morning?",
+      "unanswerable": true,
+      "tags": [
+        "near-miss"
+      ]
+    },
+    {
+      "question": "What was the rate limit of the v1 API?",
+      "unanswerable": true,
+      "tags": [
+        "near-miss"
+      ]
+    },
+    {
+      "question": "What is the name of our CFO?",
+      "unanswerable": true,
+      "tags": [
+        "near-miss"
+      ]
+    },
+    {
+      "question": "How much parental leave do employees in Sweden get?",
+      "unanswerable": true,
+      "tags": [
+        "near-miss"
+      ]
+    },
+    {
+      "question": "What is the dress code?",
+      "unanswerable": true,
+      "tags": [
+        "off-topic"
+      ]
+    },
+    {
+      "question": "Who won the 2022 football World Cup?",
+      "unanswerable": true,
+      "tags": [
+        "off-topic"
+      ]
+    }
+  ]
+}

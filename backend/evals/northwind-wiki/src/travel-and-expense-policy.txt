@@ -1,0 +1,68 @@
+# Northwind Labs Travel and Expense Policy
+
+Version 2026.2, valid from 1 March 2026. Owner: Finance (finance@northwind.example).
+
+# 1. Principles
+
+Travel only when meeting in person clearly adds value; prefer video calls for routine meetings. Choose the most economical option that is reasonable for the trip. All work travel needs your manager's approval before booking.
+
+# 2. Booking travel
+
+Book flights, trains and hotels through Matkahelmi, our travel agency, at least 14 days before departure when possible. Bookings made elsewhere are reimbursed only up to the price Matkahelmi would have offered.
+
+Within Finland, take the train when the journey takes less than 4 hours, for example Tampere–Helsinki. Flights shorter than 2 hours are booked in economy class. For flights over 6 hours you may book premium economy. Business class requires approval from the CFO.
+
+# 3. Hotels
+
+Book a standard room close to where you work. The hotel limits per night are listed in section 6. If no hotel is available within the limit, ask Finance for approval before booking. Airbnb and other private rentals are allowed within the same limits but must be booked through Matkahelmi.
+
+# 4. Daily allowances
+
+Daily allowances (per diem) cover meals and small expenses on trips of more than 6 hours that are more than 15 km from both your home and your office. A partial daily allowance of 45 percent is paid for trips of 6 to 10 hours. If a meal is provided free of charge (for example at a conference), the allowance is reduced by 50 percent for two free meals and by 25 percent for one.
+
+Daily allowances are claimed in Personio after the trip, together with your travel times.
+
+# 5. Mileage
+
+When using your own car for work travel, you can claim mileage of 0.59 euros per kilometre in Finland and 0.30 euros per kilometre in Germany. Mileage is only paid when the trip has been approved in advance and public transport is clearly less practical. Parking fees and road tolls are reimbursed against a receipt.
+
+# 6. Daily allowances and hotel limits by country
+
+Finland (Helsinki, Tampere and other cities): daily allowance 53 euros; hotel limit 180 euros per night.
+Germany (Berlin): daily allowance 58 euros; hotel limit 190 euros per night.
+Germany (Munich, Frankfurt): daily allowance 62 euros; hotel limit 220 euros per night.
+Sweden (Stockholm): daily allowance 64 euros; hotel limit 210 euros per night.
+Norway (Oslo): daily allowance 74 euros; hotel limit 230 euros per night.
+Denmark (Copenhagen): daily allowance 72 euros; hotel limit 220 euros per night.
+Estonia (Tallinn): daily allowance 52 euros; hotel limit 140 euros per night.
+Netherlands (Amsterdam): daily allowance 70 euros; hotel limit 240 euros per night.
+United Kingdom (London): daily allowance 76 euros; hotel limit 260 euros per night.
+France (Paris): daily allowance 72 euros; hotel limit 250 euros per night.
+Spain (Madrid, Barcelona): daily allowance 60 euros; hotel limit 180 euros per night.
+Poland (Warsaw): daily allowance 54 euros; hotel limit 130 euros per night.
+United States (New York, San Francisco): daily allowance 88 euros; hotel limit 320 euros per night.
+United States (other cities): daily allowance 75 euros; hotel limit 220 euros per night.
+
+For countries not listed, Finance uses the Finnish Tax Administration's allowance rates and a hotel limit of 180 euros per night.
+
+# 7. Taxis and local transport
+
+Use public transport where practical. Taxis are reimbursed for travel to and from airports and stations when public transport is not available or would take more than 45 minutes longer, and always between 23:00 and 06:00. Use the company's Bolt Business or Uber for Business account so the ride is billed directly; otherwise attach the receipt.
+
+# 8. Meals and entertainment
+
+Business meals with customers are reimbursed up to 70 euros per person including drinks; the receipt must list the participants and their companies. Internal team dinners need approval from your department head and are limited to 60 euros per person. Alcohol is not reimbursed for internal events outside the annual summer and Christmas parties.
+
+# 9. Expense claims
+
+Submit expenses in Personio within 30 days of the expense with a photo of the receipt. Expenses older than 90 days are not reimbursed. Reimbursements are paid with the next monthly salary when submitted by the 20th day of the month.
+
+Company credit cards are issued to employees who travel more than six times a year. Card expenses must be reconciled in Personio by the 5th day of the following month.
+
+# 10. Things that are not reimbursed
+
+Fines (including parking and speeding fines), minibar purchases, personal entertainment such as films or spa services, lost luggage that was not reported to the airline, and travel insurance (employees are already covered by the company's travel insurance with If).
+
+# 11. Travel insurance and safety
+
+All employees are covered by the company's travel insurance with If on work trips and on personal trips of up to 45 days. The insurance card is in the If mobile app. In an emergency abroad, call If's 24-hour assistance at +358 10 514 2405 and inform your manager.

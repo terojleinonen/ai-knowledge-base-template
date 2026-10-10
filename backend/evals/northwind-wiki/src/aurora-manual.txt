@@ -1,0 +1,131 @@
+# Aurora Sensor Platform - Installation and User Manual
+
+Document AUR-MAN-EN, revision F, for firmware 3.x. Northwind Labs Oy, Tampere, Finland.
+
+# 1. About this manual
+
+This manual describes how to plan, install, operate and maintain an Aurora installation. It is intended for installers and facility managers. For the cloud API, see the Aurora Cloud API reference. Release-specific changes are listed in the firmware release notes.
+
+# 2. System overview
+
+An Aurora installation consists of Aurora Nodes, one or more Aurora Gateways and the Aurora Cloud service. Each Aurora Node measures temperature, relative humidity, CO2 concentration and ambient light. Nodes send their readings to a gateway, and the gateway forwards them to Aurora Cloud, where they can be viewed in the Aurora dashboard or retrieved with the API.
+
+The Aurora Node Plus variant also measures volatile organic compounds (VOC) and air pressure. It uses the same gateway and mounting accessories as the standard Node.
+
+# 3. Package contents
+
+Aurora Node package: one Aurora Node, two AA lithium batteries (installed, with a pull tab), a wall plate, two screws and wall plugs, a double-sided adhesive pad, and a quick start card.
+
+Aurora Gateway package: one Aurora Gateway, a 12 V power supply with EU and UK plugs, a wall bracket, an Ethernet cable (2 m), and an external LTE antenna for models with LTE-M.
+
+# 4. Planning an installation
+
+Place one Node in each room or zone you want to monitor. In open-plan offices, place one Node per 100 square metres.
+
+Mount Nodes at a height of 1.2 to 1.8 metres, away from windows, doors, radiators, ventilation outlets and direct sunlight. Do not mount Nodes on external walls if you can avoid it, because they make temperature readings less accurate.
+
+Nodes form a Bluetooth Low Energy mesh. The maximum range between two nodes, or between a node and the gateway, is 30 metres indoors with no more than two walls in between. Concrete walls and lift shafts shorten the range considerably. Each node can relay messages for other nodes, so a building can be covered with chains of nodes. A message can travel through at most 6 hops before reaching the gateway.
+
+One Aurora Gateway supports up to 250 nodes. For more nodes, or for buildings with several floors separated by concrete slabs, install one gateway per floor.
+
+# 5. Installing the gateway
+
+Install the gateway first, in a central location on the floor it serves, at least 1.5 metres above the floor.
+
+The gateway connects to Aurora Cloud over Ethernet or LTE-M. Ethernet is preferred. The gateway needs outbound access to TCP port 443 (HTTPS) and UDP port 123 (NTP); no inbound ports are needed. Proxies are not supported in firmware 3.x.
+
+To install: mount the wall bracket, connect the Ethernet cable and power supply, and wait until the status LED turns solid green. This usually takes less than two minutes. If the LED is solid green, the gateway is connected to Aurora Cloud.
+
+To use LTE-M instead of Ethernet, attach the external antenna, insert the SIM card supplied by Northwind Labs, and select LTE-M in the dashboard under Gateways > Connectivity. The LTE-M data plan is included in the Aurora Cloud subscription.
+
+# 6. Claiming the gateway
+
+Each gateway has a claim code printed on the label on its back, in the format AUR-XXXX-XXXX. In the Aurora dashboard, open Sites > Add gateway and enter the claim code. A gateway can belong to only one organisation at a time; to move it to another organisation, release it first under Gateways > Settings > Release.
+
+# 7. Installing nodes
+
+1. Pull out the battery tab. The node's LED blinks blue while it searches for a gateway.
+2. Hold the node within 5 metres of the gateway or of an installed node.
+3. When the LED blinks green three times, the node has joined the network. Pairing usually takes less than 30 seconds.
+4. Mount the wall plate with screws or with the adhesive pad, and click the node onto the plate.
+5. In the dashboard, assign the node to a room under Sites > Rooms.
+
+If the node does not join within two minutes, the LED blinks red. Move the node closer to the gateway and press the reset button for one second to try again.
+
+# 8. LED codes
+
+Node LED codes:
+Blinking blue: searching for a network.
+Three green blinks: joined the network.
+Single green blink every 60 seconds: normal operation (only during the first hour after joining; afterwards the LED stays off to save battery).
+Blinking amber every 10 seconds: battery low, replace within four weeks.
+Solid amber for 5 seconds after pressing the button: firmware update in progress.
+Blinking red: could not join the network.
+Fast red blinking: sensor fault, contact support.
+
+Gateway LED codes:
+Solid green: connected to Aurora Cloud.
+Blinking green: starting up or connecting.
+Solid amber: no internet connection; readings are buffered.
+Blinking amber: firmware update in progress, do not unplug.
+Solid red: hardware fault, contact support.
+
+When the gateway has no internet connection, it buffers readings for up to 72 hours and sends them when the connection returns.
+
+# 9. Readings and reporting interval
+
+By default, nodes report readings every 60 seconds. The reporting interval can be set per site to 30 seconds, 60 seconds, 5 minutes or 15 minutes under Sites > Settings > Reporting interval. Shorter intervals reduce battery life: at 30 seconds, the expected battery life is about 2.5 years.
+
+Readings are retained in Aurora Cloud for 25 months on the Standard plan and for 7 years on the Enterprise plan.
+
+# 10. Batteries
+
+Aurora Nodes are powered by two AA lithium batteries (1.5 V Li-FeS2, for example Energizer Ultimate Lithium). The expected battery life is 5 years at the default reporting interval of 60 seconds with firmware 3.0 or later. Alkaline and rechargeable batteries must not be used; they report incorrect battery levels and can leak.
+
+To replace the batteries, remove the node from the wall plate by pushing it upwards, open the battery cover with a coin, and replace both batteries at the same time. The node keeps its settings and rejoins the network automatically.
+
+Dispose of used batteries according to local regulations. Do not dispose of nodes with household waste; return them to Northwind Labs or a WEEE collection point.
+
+# 11. Calibration
+
+The CO2 sensor uses automatic baseline correction (ABC). It assumes that the room reaches outdoor CO2 levels (about 420 ppm) at least once every 8 days, for example at night or during weekends. In rooms that are occupied all the time, such as hospitals or 24/7 control rooms, turn ABC off in the dashboard and calibrate the sensor manually once a year with the Aurora calibration kit.
+
+Temperature and humidity sensors are factory-calibrated and do not need recalibration. A temperature offset of up to ±3 degrees Celsius can be set per node if a node is installed in a place that is systematically warmer or colder than the room.
+
+# 12. Firmware updates
+
+Firmware updates are installed over the air. Gateways download updates automatically and install them during the maintenance window, by default between 02:00 and 04:00 local time. Nodes are updated by their gateway, a few nodes at a time; updating a large site can take several days. Updates can be postponed by up to 30 days in the dashboard, but security updates cannot be postponed.
+
+# 13. Cleaning and maintenance
+
+Clean nodes with a dry or slightly damp cloth. Do not use solvents or spray cleaners, and never spray liquid into the ventilation openings. The enclosure is rated IP54: it is protected against dust and splashing water, but it must not be installed outdoors or in rooms where it can be hosed down.
+
+# 14. Troubleshooting
+
+Node shows offline in the dashboard: check whether the node's battery is low, whether the gateway is online, and whether new walls or furniture block the signal. Add a node between the node and the gateway to extend the mesh.
+
+CO2 readings are too high in the morning: if the room is never ventilated at night, ABC calibration may be off. Turn off ABC and calibrate manually.
+
+Temperature readings are too high: check that the node is not in direct sunlight or near a heat source. Set a temperature offset if needed.
+
+Gateway shows solid amber: check the Ethernet cable and the network's firewall rules for outbound port 443. For LTE-M, check the antenna connection and signal strength in the dashboard.
+
+Many nodes went offline at the same time: check the Aurora status page at https://status.aurora.example for incidents.
+
+# 15. Technical specifications
+
+Aurora Node: dimensions 80 x 80 x 25 mm, weight 95 grams, operating temperature -10 to +50 degrees Celsius, humidity 0 to 95 percent (non-condensing), enclosure IP54.
+
+Measurement ranges and accuracy: temperature -10 to +50 degrees Celsius, accuracy ±0.2 degrees; relative humidity 0 to 100 percent, accuracy ±2 percent RH; CO2 400 to 5000 ppm, NDIR sensor, accuracy ±30 ppm plus 3 percent of the reading; ambient light 0 to 10,000 lux.
+
+Aurora Node Plus additionally: VOC index 0 to 500, air pressure 300 to 1100 hPa. Dimensions 80 x 80 x 30 mm, weight 110 grams.
+
+Aurora Gateway: dimensions 160 x 110 x 35 mm, power 12 V DC, typical consumption 3.5 W, Ethernet 10/100 Mbit/s, optional LTE-M, operating temperature 0 to +45 degrees Celsius.
+
+Radio: Bluetooth Low Energy 5.2 mesh, 2.4 GHz.
+
+# 16. Warranty and support
+
+All hardware comes with a 3-year limited warranty from the date of delivery. Batteries are not covered by the warranty. The warranty does not cover damage from water, incorrect batteries or installation outside the specified conditions.
+
+Support: support@aurora.example, or +358 3 555 0100 on weekdays 8:00–17:00 Finnish time. Enterprise customers have 24/7 phone support.

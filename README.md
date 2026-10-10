@@ -171,8 +171,8 @@ npm test && npm run lint && npm run typecheck && npm run build
 
 `php artisan kb:eval` runs a dataset of questions with known answers through the real pipeline, using your configured models, and reports:
 
-- **Retrieval:** Hit@1, Hit@k, MRR, and how many unanswerable questions retrieval already filters out
-- **Answers:** fact recall, citation precision (did it cite the right document?), uncited answers, correct and false abstentions, chat model token usage
+- **Retrieval:** Hit@1, Hit@k, MRR, evidence recall (were the passages that answer the question retrieved?), and how many unanswerable questions retrieval already filters out
+- **Answers:** fact recall, citation precision (did it cite the right document, and the passage with the evidence?), uncited answers, correct and false abstentions, chat model token usage
 - **Latency:** p50 and max
 
 ```bash
@@ -181,10 +181,22 @@ php artisan kb:eval --retrieval-only          # seconds; no chat model calls
 php artisan kb:eval                           # full run with answers
 php artisan kb:eval --no-repair               # measure the raw model's citations
 php artisan kb:eval --json=results.json       # save results to compare runs
+php artisan kb:eval evals/northwind-wiki        # the larger, harder dataset
 php artisan kb:eval path/to/dataset --limit=5
 ```
 
-Each run ingests the dataset's documents under a throwaway user and deletes it, including stored files, afterwards. It uses your configured database, not a test database. A sample dataset is in `backend/evals/northwind/`. To build your own, add documents and a `cases.json`:
+Two datasets are included:
+
+- **`evals/northwind`:** 3 short documents and 46 cases. It is fast and cheap, and is the demo's sample data.
+- **`evals/northwind-wiki`:** a company wiki of 11 documents in four formats (Markdown, text, PDF, DOCX), 74 passages and 78 cases, tagged by question type. It is built to be hard: an outdated 2024 handbook contradicts the current one, the release notes and meeting notes are full of near-identical passages that hide one fact, and many questions share no wording with the documents. PDF and DOCX files are built from `src/` with `evals/tools/make_document.py`.
+
+Baseline (search only: `text-embedding-3-small`, hybrid search, Jina reranker at 0.12, top 4): evidence recall 97%, right document first 94%, 67 of 69 answerable cases passed. The misses are both paraphrased questions: "Can I bring my dog to work?" (the pets paragraph shares a passage with unrelated topics, so the reranker scores it below the cutoff) and the allowance for a country missing from the table. For 3 questions, the outdated handbook ranked above the current one.
+
+With answers (Claude Opus 5.5): 76 of 78 passed, with fact recall 96%, citation precision 93% by document and 77% by passage, all 9 unanswerable questions declined, and about 1,400 input tokens per answer. Only the two search misses failed. On all 10 outdated-handbook questions the model gave the current figures. It often added the old figure for comparison, and sometimes hedged that "the sources don't say the 2024 edition was superseded", because the sentence saying so wasn't among the retrieved passages.
+
+A case passes when every fact is in the answer, the model doesn't decline, and at least one citation points to the evidence passage. Extra citations to other relevant sources, such as the old handbook for comparison, lower citation precision but don't fail the case.
+
+Each run ingests the dataset's documents under a throwaway user and deletes it, including stored files, afterwards. It uses your configured database, not a test database. To build your own dataset, add documents and a `cases.json`:
 
 ```json
 {
@@ -193,12 +205,13 @@ Each run ingests the dataset's documents under a throwaway user and deletes it, 
   "cases": [
     { "question": "How many vacation days?", "expect_documents": ["handbook"], "facts": ["30", ["10", "ten"]] },
     { "question": "Can I carry some over?", "after": ["How many vacation days?"], "expect_documents": ["handbook"], "facts": ["10"] },
+    { "question": "Is the API rate-limited?", "expect_documents": ["faq"], "facts": ["600"], "evidence": ["600 requests per minute"], "tags": ["lookup"] },
     { "question": "What is the capital of France?", "unanswerable": true }
   ]
 }
 ```
 
-`expect_documents` uses file names without extensions. Each entry in `facts` must appear in the answer; an inner list means any of those alternatives counts. `after` makes a case a follow-up: the earlier questions are asked first in the same conversation (answered for real in a full run, not counted towards the case). Use it after changing models, prompts, chunking or `KB_RETRIEVAL_MIN_SCORE`.
+`expect_documents` uses file names without extensions. Each entry in `facts` must appear in the answer; an inner list means any of those alternatives counts. `evidence` lists text the answer depends on, matched ignoring case and line breaks; an inner list means any alternative counts. Each entry must appear in a retrieved passage, and a citation counts as passage-correct when its passage contains evidence. A warning flags evidence that appears in no passage at all, which means the case itself is wrong. `tags` group the results by question type. `after` makes a case a follow-up: the earlier questions are asked first in the same conversation (answered for real in a full run, not counted towards the case). Use it after changing models, prompts, chunking or `KB_RETRIEVAL_MIN_SCORE`.
 
 ## API
 
@@ -325,10 +338,11 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - Bot protection with Cloudflare Turnstile
 - Follow-up questions rewritten into standalone search queries
 - Citations open the cited passage, highlighted within the text around it
+- A harder evaluation set (11 documents, 78 cases) with passage-level evidence checks and results by question type
 - Hybrid search (vector + BM25 keyword) with a reranker whose cutoff turns away 74% of uncovered questions before any model call
 
 ### Next
-1. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level. The sample set is too small to show what hybrid search gains in ranking: vector search alone already ranks every case correctly.
+1. **Prefer current documents over outdated ones.** The wiki eval shows an outdated handbook outranking the current one. Document dates or "superseded by" links could fix that.
 2. **Sentence-level highlights.** Mark the sentences that support each claim, not the whole cited passage.
 
 ### Later

@@ -56,6 +56,10 @@ final readonly class Dataset
             'cases.*.unanswerable' => ['sometimes', 'boolean'],
             'cases.*.after' => ['sometimes', 'array'],
             'cases.*.after.*' => ['string'],
+            'cases.*.evidence' => ['sometimes', 'array'],
+            'cases.*.evidence.*' => ['required'],
+            'cases.*.tags' => ['sometimes', 'array'],
+            'cases.*.tags.*' => ['string'],
         ]);
 
         if ($validator->fails()) {
@@ -92,6 +96,8 @@ final readonly class Dataset
                 facts: array_map(fn ($fact) => array_values((array) $fact), $case['facts'] ?? []),
                 unanswerable: (bool) ($case['unanswerable'] ?? false),
                 after: array_values($case['after'] ?? []),
+                evidence: array_map(fn ($e) => array_values(array_map('strval', (array) $e)), $case['evidence'] ?? []),
+                tags: array_values($case['tags'] ?? []),
             );
         }
 

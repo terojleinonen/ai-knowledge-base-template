@@ -1,0 +1,71 @@
+IT HELPDESK - FREQUENTLY ASKED QUESTIONS
+Maintained by the IT team. Ask in #it-help on Slack or email it@northwind.example. The service desk is staffed on weekdays 8:00-17:00 Finnish time.
+
+Q: How do I get a new laptop?
+A: Laptops are replaced every three years. IT contacts you about two months before your replacement date. If your laptop breaks earlier, open a ticket in the service desk; you get a loaner within one working day in Tampere and Helsinki, and within two working days in Berlin.
+
+Q: Can I choose between Mac and Linux?
+A: Yes. You can choose a MacBook Pro or a Lenovo ThinkPad with Ubuntu LTS. Windows laptops are only provided to the finance team, who need them for the accounting software.
+
+Q: My laptop is out of disk space. Can I get a bigger one?
+A: Clean up first with the Disk Cleanup guide on the IT wiki. If that is not enough, IT can replace the laptop with a larger-storage model if your role needs it, for example for firmware builds.
+
+Q: How do I install software that is not in the approved catalogue?
+A: Request it through the service desk with a short explanation. IT checks the software's security and licence. Most requests are handled within three working days.
+
+Q: How do I set up my YubiKey?
+A: Follow the YubiKey guide on the IT wiki. Register the key in Google Workspace, GitHub, AWS and 1Password. Engineers register both their main key and the backup key.
+
+Q: I lost my YubiKey. What should I do?
+A: Report it in #it-help the same day so the key can be revoked. Use your backup key or an authenticator app in the meantime. A replacement key can be picked up from IT the next working day.
+
+Q: I forgot my 1Password account password.
+A: Your account can be recovered by a 1Password admin in IT. Ask in #it-help; IT will verify your identity on a video call before starting the recovery. IT never asks for your password.
+
+Q: How do I connect to the VPN?
+A: Install Tailscale from the approved catalogue and sign in with your Google Workspace account. The VPN is required for internal systems such as Grafana, the build servers and the staging environment.
+
+Q: The VPN does not connect from a hotel network.
+A: Some hotel networks block VPN traffic. Try your phone's mobile hotspot instead. If it still fails, post the error message in #it-help.
+
+Q: How do I connect to the office Wi-Fi?
+A: Company laptops connect automatically to NW-Staff. Personal phones and visitors use NW-Guest; its password changes every Monday and is shown on the screens at reception.
+
+Q: How do I book a meeting room?
+A: Book rooms in Google Calendar by adding the room as a guest. Rooms are listed by office and floor. Bookings not checked in on the room's tablet within 10 minutes of the start time are released automatically.
+
+Q: The meeting room screen does not work.
+A: Every meeting room has a Google Meet hardware kit. Restart it from the tablet by choosing Settings > Restart. If that does not help, report it in #it-help with the room name.
+
+Q: How do I print?
+A: Printers are in the copy rooms of each office. Install the printer with the "Office printers" package from the self-service app. Print jobs are released by tapping your access badge on the printer.
+
+Q: How do I get access to a system?
+A: Request access through the service desk. The system owner approves the request. Access to production systems also needs approval from your engineering manager.
+
+Q: How do I get a work phone?
+A: Order a phone through the service desk. You can choose between the current standard iPhone and a Samsung Galaxy A-series phone. The subscription with unlimited data in your country of residence is paid by Northwind Labs.
+
+Q: Can I use my own phone for work?
+A: Yes, for Slack and email only, using the official apps and with a screen lock. Other company data must not be stored on personal devices.
+
+Q: How do I report a phishing email?
+A: Use the "Report phishing" button in Gmail. It sends the email to the security team and removes it from your inbox. If you clicked a link or entered your password, also post in #security immediately.
+
+Q: My laptop was stolen.
+A: Report it to IT within 24 hours, and the same day if it contained Confidential data. IT can lock and wipe the laptop remotely. In Finland, also file a police report online at poliisi.fi; you need the report for the insurance.
+
+Q: How long are deleted files kept in Google Drive?
+A: Files in the trash are kept for 30 days. After that, IT can restore them for up to 25 more days from the admin console. Ask in #it-help as soon as possible.
+
+Q: How big can email attachments be?
+A: Gmail accepts attachments up to 25 MB. For larger files, share a Google Drive link with the named recipients instead.
+
+Q: How do I get a shared mailbox or Slack channel?
+A: Shared mailboxes (Google Groups) are requested through the service desk. Public Slack channels can be created by anyone; private channels for external partners (Slack Connect) need IT approval.
+
+Q: What happens to my accounts when I leave?
+A: Your accounts are closed at the end of your last working day. Your Google Drive files are transferred to your manager. Return your laptop, phone, badge and YubiKey to IT on your last day.
+
+Q: Who do I contact outside office hours?
+A: For urgent IT problems outside office hours, post in #it-help and mention @it-oncall. For security incidents, call the security on-call number +358 40 555 0199.

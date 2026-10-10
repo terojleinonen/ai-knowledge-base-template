@@ -1,0 +1,73 @@
+# Northwind Labs Information Security Policy
+
+Version 3.1, approved by the management team on 12 February 2026. Owner: Security team (security@northwind.example). This policy applies to all employees, contractors and interns.
+
+# 1. Accounts and passwords
+
+All company accounts must use a password manager. The approved password manager is 1Password; each employee gets a 1Password Business account on their first day. Passwords must be at least 16 characters long and unique to each service. Passwords must never be shared, including with IT staff, who will never ask for them.
+
+Single sign-on through Google Workspace is used wherever a service supports it. Personal accounts must not be used for company work.
+
+# 2. Multi-factor authentication
+
+Multi-factor authentication (MFA) is mandatory for Google Workspace, GitHub, AWS, Slack, Personio and 1Password. SMS codes are not accepted as a second factor. Use a hardware security key or an authenticator app.
+
+Hardware security keys (YubiKey 5C NFC) are provided to all employees. Engineers receive two keys, one to keep as a backup in a safe place. A YubiKey is required for AWS console access and for approving production deployments.
+
+If you lose a YubiKey, report it in the #it-help channel the same day so the key can be revoked.
+
+# 3. Devices
+
+Laptops must have full-disk encryption enabled: FileVault on macOS and LUKS on Linux. Laptops are enrolled in device management (Kandji for macOS, Fleet for Linux) before first use.
+
+Screens must lock automatically after 5 minutes of inactivity. Operating system security updates must be installed within 7 days of release, and critical updates within 48 hours. Devices that fall behind are blocked from Google Workspace until they are updated.
+
+Personal devices may be used for Slack and email on a phone only, with a screen lock and the official apps. Company data must not be stored on personal computers.
+
+# 4. Data classification
+
+Data is classified into four levels:
+
+Public: published material, such as the website and public documentation.
+
+Internal: day-to-day company information, such as this policy, meeting notes and most internal documents.
+
+Confidential: customer data, contracts, salaries, unreleased product plans and security reports.
+
+Restricted: credentials, encryption keys, personal identity numbers and health information. Restricted data is only stored in 1Password or in AWS Secrets Manager.
+
+Customer data is always Confidential or Restricted. Confidential data may be shared with external parties only under a signed NDA and only through Google Drive with named recipients, never through public links.
+
+# 5. AI tools
+
+Approved AI assistants may be used for Public and Internal data. Confidential and Restricted data, including customer data and source code of unreleased products, may be used only with AI tools listed as approved for Confidential data on the security wiki page. Never paste credentials into any AI tool.
+
+# 6. Network and remote work
+
+Use the company VPN (Tailscale) to reach internal systems. Public Wi-Fi may be used only with the VPN on. Office Wi-Fi networks are NW-Staff for company devices and NW-Guest for visitors; the guest password changes every Monday and is shown on the screens at reception.
+
+# 7. Incident reporting
+
+Suspected security incidents, including phishing emails, lost devices and accidental data sharing, must be reported immediately to security@northwind.example or in the #security Slack channel. Outside office hours, call the security on-call number +358 40 555 0199.
+
+The security team responds to incidents within one hour during business hours and within four hours at other times. Never try to investigate a suspected breach on your own, and do not delete suspicious emails before the security team has seen them; use the "Report phishing" button in Gmail.
+
+Personal data breaches must be reported to the data protection authority within 72 hours. The Data Protection Officer, Laura Virtanen (dpo@northwind.example), decides on notifications.
+
+# 8. Access management
+
+Access follows the principle of least privilege. Access rights to production systems are reviewed every quarter by the engineering managers. Access is removed on an employee's last working day, and for contractors on the last day of their contract.
+
+Requests for new access are made through the IT service desk and approved by the system owner.
+
+# 9. Software and vulnerabilities
+
+Only software from the approved catalogue may be installed on company laptops. Other software needs approval from IT. Dependencies in our products are scanned with Dependabot, and critical vulnerabilities in production must be fixed within 7 days, high within 30 days.
+
+# 10. Security training
+
+All employees complete security awareness training within their first two weeks and then once a year. Phishing simulations are sent several times a year; clicking a simulated phishing link leads to a short extra training, not to disciplinary action.
+
+# 11. Exceptions
+
+Exceptions to this policy must be approved in writing by the Head of Security, Mikko Laine, and are reviewed every six months.
