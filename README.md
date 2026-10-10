@@ -37,6 +37,7 @@ Question ─▶ follow-up? rewrite it as a standalone question from the conversa
          ─▶ prompt LLM with numbered sources + recent chat history
          ─▶ answer streamed token-by-token (SSE) with [n] citations
          ─▶ citations verified against the sources, then persisted
+         ─▶ clicking [n] opens the cited passage within its surrounding text
 ```
 
 - Every query is scoped to the authenticated user's documents. There's no cross-tenant retrieval, and tests cover this.
@@ -215,6 +216,7 @@ All routes are prefixed with `/api`. Authenticated routes need `Authorization: B
 | POST | `/chat` | `{ question, conversation_id?, document_ids? }` → assistant message with `sources` |
 | POST | `/chat/stream` | Same input; server-sent events: `sources` → `delta`… → `done` (saved message) or `error` |
 | GET / DELETE | `/conversations`, `/conversations/{id}` | History |
+| GET | `/passages/{chunk_id}` | A cited passage with up to two passages of context on each side (overlap removed) |
 
 Rate limits: auth 10/min per IP, uploads 30/min, chat 20/min per user.
 
@@ -322,11 +324,12 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - Durable uploads on Cloudflare R2 (any S3-compatible storage works)
 - Bot protection with Cloudflare Turnstile
 - Follow-up questions rewritten into standalone search queries
+- Citations open the cited passage, highlighted within the text around it
 - Hybrid search (vector + BM25 keyword) with a reranker whose cutoff turns away 74% of uncovered questions before any model call
 
 ### Next
 1. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level. The sample set is too small to show what hybrid search gains in ranking: vector search alone already ranks every case correctly.
-2. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
+2. **Sentence-level highlights.** Mark the sentences that support each claim, not the whole cited passage.
 
 ### Later
 - OCR for scanned PDFs

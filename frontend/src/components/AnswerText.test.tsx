@@ -1,17 +1,26 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { plainText } from '../lib/markdown'
 import { AnswerText } from './AnswerText'
 import type { Source } from '../lib/types'
 
 const source = (index: number): Source => ({ index, document_id: 1, document_title: 'Handbook', chunk_id: index, excerpt: '…', score: 0.9 })
 
-it('links known citations to their sources', () => {
-  const { container } = render(<AnswerText content="You get 25 days [1]. Unknown [7]." sources={[source(1)]} messageId={42} />)
+it('turns known citations into buttons that open their source', async () => {
+  const onCite = vi.fn()
+  const { container } = render(<AnswerText content="You get 25 days [1]. Unknown [7]." sources={[source(1)]} onCite={onCite} />)
 
-  const link = screen.getByRole('link', { name: 'Source 1' })
-  expect(link).toHaveAttribute('href', '#source-42-1')
-  expect(screen.queryByRole('link', { name: 'Source 7' })).not.toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Source 1' }))
+  expect(onCite).toHaveBeenCalledWith(source(1))
+  expect(screen.queryByRole('button', { name: 'Source 7' })).not.toBeInTheDocument()
   expect(container).toHaveTextContent('You get 25 days 1. Unknown [7].')
+})
+
+it('shows citations as plain badges without onCite', () => {
+  render(<AnswerText content="You get 25 days [1]." sources={[source(1)]} />)
+
+  expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('Source 1')).toHaveTextContent('1')
 })
 
 it('renders the Markdown that models produce', () => {
@@ -24,7 +33,7 @@ it('renders the Markdown that models produce', () => {
     '',
     'Full-time employees earn **30 days per year** [1].',
   ].join('\n')
-  const { container } = render(<AnswerText content={content} sources={[source(1), source(2)]} messageId={7} />)
+  const { container } = render(<AnswerText content={content} sources={[source(1), source(2)]} onCite={() => {}} />)
 
   expect(container.querySelectorAll('li')).toHaveLength(2)
   expect(screen.getByText('IT within 24 hours').tagName).toBe('STRONG')
@@ -32,18 +41,18 @@ it('renders the Markdown that models produce', () => {
   expect(screen.getByText('FileVault').tagName).toBe('CODE')
   expect(screen.getByText('Who and how fast')).toHaveClass('font-semibold')
   expect(container).not.toHaveTextContent('**')
-  expect(screen.getAllByRole('link', { name: 'Source 1' })).toHaveLength(2)
+  expect(screen.getAllByRole('button', { name: 'Source 1' })).toHaveLength(2)
 })
 
 it('handles grouped citations and keeps snake_case intact', () => {
-  render(<AnswerText content="Set the max_upload_size value [1, 2]." sources={[source(1), source(2)]} messageId={1} />)
+  render(<AnswerText content="Set the max_upload_size value [1, 2]." sources={[source(1), source(2)]} onCite={() => {}} />)
 
   expect(screen.getByText(/max_upload_size/)).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Source 2' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Source 2' })).toBeInTheDocument()
 })
 
 it('never renders HTML from the answer', () => {
-  const { container } = render(<AnswerText content={'<img src=x onerror="alert(1)"> **<b>bold</b>**'} sources={[]} messageId={1} />)
+  const { container } = render(<AnswerText content={'<img src=x onerror="alert(1)"> **<b>bold</b>**'} sources={[]} onCite={() => {}} />)
 
   expect(container.querySelector('img')).toBeNull()
   expect(container.querySelector('b')).toBeNull()

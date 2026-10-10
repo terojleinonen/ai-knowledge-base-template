@@ -52,7 +52,7 @@ it('streams an answer and then shows the saved conversation', async () => {
   await userEvent.type(screen.getByLabelText('Your question'), 'How many vacation days?{Enter}')
 
   expect(await screen.findByText('Handbook')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Source 1' })).toHaveAttribute('href', '#source-2-1')
+  expect(screen.getByRole('button', { name: 'Source 1' })).toBeInTheDocument()
   expect(screen.getByText('How many vacation days?')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Ask' })).toBeInTheDocument()
 
@@ -103,4 +103,68 @@ it('shows daily limit messages from the server as-is', async () => {
   await userEvent.type(screen.getByLabelText('Your question'), 'Hello there{Enter}')
 
   expect(await screen.findByRole('alert')).toHaveTextContent("You've reached today's limit of 15 questions.")
+})
+
+const passage = {
+  chunk_id: 9,
+  document: { id: 3, title: 'Handbook' },
+  position: 4,
+  total: 12,
+  before: ['Working hours are flexible.'],
+  content: 'Vacation policy: employees get 25 vacation days.',
+  after: ['Sick leave needs a certificate.'],
+}
+
+function renderConversation(passageResponse: { body?: unknown; status?: number }) {
+  mockApi((url) => {
+    if (url.endsWith('/documents?per_page=100')) return { body: { data: [{ id: 3, status: 'ready' }] } }
+    if (url.endsWith('/conversations/7')) return { body: { data: { id: 7, title: 'Vacation', messages: [userMessage, answer] } } }
+    if (url.endsWith('/passages/9')) return passageResponse
+    return undefined
+  })
+
+  return renderApp(
+    <Routes>
+      <Route path="/app/chat/:id" element={<ChatPage />} />
+    </Routes>,
+    { route: '/app/chat/7' },
+  )
+}
+
+it('opens a cited passage in context and closes it with Escape', async () => {
+  renderConversation({ body: { data: passage } })
+
+  const citation = await screen.findByRole('button', { name: 'Source 1' })
+  await userEvent.click(citation)
+
+  const dialog = await screen.findByRole('dialog', { name: 'Handbook' })
+  expect(await screen.findByLabelText('Cited passage')).toHaveTextContent('Vacation policy: employees get 25 vacation days.')
+  expect(dialog).toHaveTextContent('Working hours are flexible.')
+  expect(dialog).toHaveTextContent('Sick leave needs a certificate.')
+  expect(dialog).toHaveTextContent('Passage 5 of 12')
+  expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus()
+
+  await userEvent.keyboard('{Escape}')
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(citation).toHaveFocus()
+})
+
+it('opens a passage from the source list too', async () => {
+  renderConversation({ body: { data: passage } })
+
+  await userEvent.click(await screen.findByText('1 sources'))
+  await userEvent.click(screen.getByRole('button', { name: 'Read in context' }))
+
+  expect(await screen.findByLabelText('Cited passage')).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+})
+
+it('falls back to the saved excerpt when the passage is gone', async () => {
+  renderConversation({ status: 404, body: { message: 'Not found.' } })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Source 1' }))
+
+  expect(await screen.findByText(/no longer available/)).toBeInTheDocument()
+  expect(screen.getByRole('dialog')).toHaveTextContent('Vacation policy…')
 })

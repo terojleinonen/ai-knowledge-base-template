@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\PassageController;
 use App\Support\ClientIp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->whereNumber('document');
     Route::post('documents/{document}/reprocess', [DocumentController::class, 'reprocess'])
         ->whereNumber('document')->middleware('throttle:uploads');
+
+    Route::get('passages/{chunk}', [PassageController::class, 'show'])->whereNumber('chunk');
 
     Route::get('conversations', [ConversationController::class, 'index']);
     Route::get('conversations/{conversation}', [ConversationController::class, 'show'])->whereNumber('conversation');
