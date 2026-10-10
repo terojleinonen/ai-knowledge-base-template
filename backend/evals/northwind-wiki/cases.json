@@ -1115,7 +1115,7 @@
       ]
     },
     {
-      "question": "What is the guest Wi-Fi password?",
+      "question": "How do I find out the guest Wi-Fi password?",
       "expect_documents": [
         "security-policy",
         "it-helpdesk-faq"

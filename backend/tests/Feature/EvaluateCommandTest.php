@@ -1,8 +1,11 @@
 <?php
 
 use App\Ai\Agents\KnowledgeBaseAssistant;
+use App\Evaluation\CaseResult;
 use App\Evaluation\Dataset;
+use App\Evaluation\EvalCase;
 use App\Evaluation\EvalRunner;
+use App\Evaluation\Summary;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
@@ -254,3 +257,19 @@ it('loads the bundled datasets', function (string $dataset) {
     expect($loaded->cases)->not->toBeEmpty()
         ->and(array_map('is_file', $loaded->documents))->each->toBeTrue();
 })->with(['northwind', 'northwind-wiki']);
+
+it('passes an answer that also cites another document, as long as it cites the evidence', function () {
+    $result = new CaseResult(new EvalCase('How many vacation days?', ['vacation'], [['30']], evidence: [['thirty vacation days']]));
+    $result->rank = 1;
+    $result->evidenceFound = 1;
+    $result->answer = 'Thirty days [1]; the old handbook said 25 [2].';
+    $result->factsFound = 1;
+    $result->citations = 2;
+    $result->correctCitations = 1;
+
+    expect($result->passed())->toBeFalse(); // no citation to the evidence passage
+
+    $result->evidenceCitations = 1;
+    expect($result->passed())->toBeTrue()
+        ->and(Summary::of([$result])['citation_precision'])->toBe(0.5);
+});

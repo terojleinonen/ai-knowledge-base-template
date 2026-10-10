@@ -82,10 +82,12 @@ final class CaseResult
             return true;
         }
 
+        // Supported by a citation to the evidence passage (or, without evidence, the expected
+        // document). Extra citations to other sources don't fail a case; citation precision
+        // measures them.
         return $this->factsFound === $this->factsTotal()
             && ! $this->abstained
-            && $this->citations > 0
-            && $this->correctCitations === $this->citations;
+            && ($this->evidenceTotal() > 0 ? $this->evidenceCitations > 0 : $this->correctCitations > 0);
     }
 
     /**
