@@ -8,9 +8,8 @@ use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
-use App\Services\Retrieval\Embedder;
+use App\Services\Retrieval\Retriever;
 use App\Services\Retrieval\SearchResult;
-use App\Services\Retrieval\VectorStore;
 use Generator;
 use Illuminate\Http\StreamedEvent;
 use Illuminate\Support\Facades\DB;
@@ -33,8 +32,7 @@ class AnswerQuestion
     public const NO_CONTEXT_ANSWER = "I couldn't find anything relevant to that in your documents. Try rephrasing the question or uploading a document that covers it.";
 
     public function __construct(
-        private readonly Embedder $embedder,
-        private readonly VectorStore $store,
+        private readonly Retriever $retriever,
         private readonly CitationRepairer $citations,
     ) {}
 
@@ -168,14 +166,7 @@ class AnswerQuestion
      */
     private function retrieve(User $user, string $question, ?array $documentIds): array
     {
-        return $this->store->search(
-            userId: $user->id,
-            queryVector: $this->embedder->embedQuery($question),
-            embeddingModel: $this->embedder->identifier(),
-            limit: (int) config('knowledge.retrieval.top_k'),
-            minScore: (float) config('knowledge.retrieval.min_score'),
-            documentIds: $documentIds,
-        );
+        return $this->retriever->retrieve($user->id, $question, $documentIds);
     }
 
     private function agent(?Conversation $conversation): KnowledgeBaseAssistant

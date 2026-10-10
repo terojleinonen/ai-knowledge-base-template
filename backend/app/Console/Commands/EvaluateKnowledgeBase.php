@@ -88,6 +88,7 @@ class EvaluateKnowledgeBase extends Command
         return array_filter([
             'embeddings' => $embedder->identifier(),
             'chat' => $withAnswers ? config('knowledge.chat.provider').':'.config('knowledge.chat.model') : null,
+            'retrieval' => config('knowledge.retrieval.mode').(config('knowledge.rerank.provider') ? '+rerank:'.config('knowledge.rerank.provider') : ''),
             'top_k' => (int) config('knowledge.retrieval.top_k'),
             'min_score' => (float) config('knowledge.retrieval.min_score'),
             'chunk' => config('knowledge.chunking.size').'/'.config('knowledge.chunking.overlap'),

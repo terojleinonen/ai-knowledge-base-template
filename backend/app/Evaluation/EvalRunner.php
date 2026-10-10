@@ -6,9 +6,8 @@ use App\Models\User;
 use App\Services\Chat\AnswerQuestion;
 use App\Services\Chat\CitationRepairer;
 use App\Services\Documents\DocumentIngestor;
-use App\Services\Retrieval\Embedder;
+use App\Services\Retrieval\Retriever;
 use App\Services\Retrieval\SearchResult;
-use App\Services\Retrieval\VectorStore;
 use Closure;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
@@ -26,8 +25,7 @@ class EvalRunner
     private ?CaseResult $current = null;
 
     public function __construct(
-        private readonly Embedder $embedder,
-        private readonly VectorStore $store,
+        private readonly Retriever $retriever,
         private readonly AnswerQuestion $answerQuestion,
         private readonly DocumentIngestor $ingestor,
     ) {}
@@ -103,13 +101,7 @@ class EvalRunner
         $case = $result->case;
 
         $start = hrtime(true);
-        $hits = $this->store->search(
-            userId: $user->id,
-            queryVector: $this->embedder->embedQuery($case->question),
-            embeddingModel: $this->embedder->identifier(),
-            limit: (int) config('knowledge.retrieval.top_k'),
-            minScore: (float) config('knowledge.retrieval.min_score'),
-        );
+        $hits = $this->retriever->retrieve($user->id, $case->question);
         $result->retrievalMs = (hrtime(true) - $start) / 1e6;
 
         $result->retrievedDocuments = array_map(fn (SearchResult $hit) => $hit->documentTitle, $hits);

@@ -1,6 +1,10 @@
 <?php
 
+use App\Jobs\ProcessDocument;
+use App\Models\Document;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Ai\Embeddings;
 use Laravel\Ai\Prompts\EmbeddingsPrompt;
 use Tests\TestCase;
@@ -36,4 +40,16 @@ function keywordVector(string $text, int $dimensions = 64): array
     $vector[$dimensions - 1] += 0.01; // never a zero vector
 
     return $vector;
+}
+
+/**
+ * Store a text document for the user and process it synchronously (needs Storage::fake('local')).
+ */
+function ingest(User $user, string $title, string $content): Document
+{
+    $document = Document::factory()->for($user)->create(['title' => $title, 'path' => "documents/{$title}.txt"]);
+    Storage::disk('local')->put($document->path, $content);
+    ProcessDocument::dispatchSync($document);
+
+    return $document->refresh();
 }
