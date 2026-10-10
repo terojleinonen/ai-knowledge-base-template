@@ -18,8 +18,8 @@ it('includes prefixes in the identifier so changing them triggers reindexing', f
     $plain = new Embedder('ollama', 'nomic-embed-text');
     $prefixed = new Embedder('ollama', 'nomic-embed-text', queryPrefix: 'search_query: ', documentPrefix: 'search_document: ');
 
-    expect($plain->identifier())->toBe('ollama:nomic-embed-text')
-        ->and($prefixed->identifier())->toStartWith('ollama:nomic-embed-text+')
+    expect($plain->identifier())->toBe('ollama:nomic-embed-text#'.Embedder::INDEX_FORMAT)
+        ->and($prefixed->identifier())->toStartWith('ollama:nomic-embed-text#'.Embedder::INDEX_FORMAT.'+')
         ->and($prefixed->identifier())->not->toBe($plain->identifier());
 });
 

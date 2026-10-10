@@ -231,7 +231,8 @@ class AnswerQuestion
     private function buildPrompt(string $question, array $results): string
     {
         $sources = collect($results)
-            ->map(fn (SearchResult $r, int $i) => sprintf("[%d] (from \"%s\")\n%s", $i + 1, $r->documentTitle, $r->content))
+            ->map(fn (SearchResult $r, int $i) => sprintf("[%d] (from \"%s\"%s)\n%s", $i + 1, $r->documentTitle,
+                $r->section ? ", section \"{$r->section}\"" : '', $r->content))
             ->implode("\n\n---\n\n");
 
         return "Sources:\n\n{$sources}\n\n===\n\nQuestion: {$question}";

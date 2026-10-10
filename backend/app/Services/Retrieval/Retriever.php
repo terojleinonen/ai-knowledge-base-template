@@ -99,7 +99,7 @@ class Retriever
         }
 
         try {
-            $response = Reranking::of(array_map(fn (SearchResult $r) => $r->content, $candidates))
+            $response = Reranking::of(array_map(fn (SearchResult $r) => $r->contextualText(), $candidates))
                 ->limit(count($candidates))
                 ->timeout((int) config('knowledge.rerank.timeout'))
                 ->rerank($question, config('knowledge.rerank.provider'), config('knowledge.rerank.model'));
@@ -116,7 +116,7 @@ class Retriever
             $candidate = $candidates[$ranked->index] ?? null;
 
             if ($candidate !== null && ($min === null || $ranked->score >= $min)) {
-                $reranked[] = new SearchResult($candidate->chunkId, $candidate->documentId, $candidate->documentTitle, $candidate->content, round($ranked->score, 4));
+                $reranked[] = new SearchResult($candidate->chunkId, $candidate->documentId, $candidate->documentTitle, $candidate->content, round($ranked->score, 4), $candidate->section);
             }
         }
 
@@ -141,7 +141,7 @@ class Retriever
         return Chunk::query()
             ->with('document:id,title')
             ->whereIn('id', array_keys($chunkIds))
-            ->get(['id', 'document_id', 'content', 'embedding'])
+            ->get(['id', 'document_id', 'section', 'content', 'embedding'])
             ->mapWithKeys(function (Chunk $chunk) use ($queryVector) {
                 $vector = VectorCodec::decode($chunk->embedding);
                 $score = count($vector) === count($queryVector) ? VectorCodec::dot($queryVector, $vector) : 0.0;
@@ -152,6 +152,7 @@ class Retriever
                     documentTitle: $chunk->document->title,
                     content: $chunk->content,
                     score: round($score, 4),
+                    section: $chunk->section,
                 )];
             })
             ->all();

@@ -5,6 +5,7 @@ use App\Jobs\ProcessDocument;
 use App\Models\Document;
 use App\Models\User;
 use App\Services\Chat\AnswerQuestion;
+use App\Services\Retrieval\Embedder;
 use App\Services\Retrieval\VectorCodec;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Exceptions;
@@ -65,7 +66,7 @@ it('processes a document into embedded chunks', function () {
     expect($document->status)->toBe(DocumentStatus::Ready)
         ->and($document->chunk_count)->toBeGreaterThan(1)
         ->and($document->chunks()->count())->toBe($document->chunk_count)
-        ->and($document->embedding_model)->toBe('openai:text-embedding-3-small')
+        ->and($document->embedding_model)->toBe('openai:text-embedding-3-small#'.Embedder::INDEX_FORMAT)
         ->and(VectorCodec::decode($document->chunks()->first()->embedding))->toHaveCount(64);
 
     Embeddings::assertGenerated(fn ($prompt) => str_contains($prompt->inputs[0], 'Section 1'));

@@ -10,5 +10,12 @@ final readonly class SearchResult
         public string $documentTitle,
         public string $content,
         public float $score,
+        public ?string $section = null,
     ) {}
+
+    /** Title, section and content, as embedded and reranked. */
+    public function contextualText(): string
+    {
+        return PassageText::of($this->documentTitle, $this->section, $this->content);
+    }
 }

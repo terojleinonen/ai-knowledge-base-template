@@ -81,9 +81,9 @@ class DemoAccounts
                 $copy->save();
 
                 DB::table('chunks')->insertUsing(
-                    ['document_id', 'user_id', 'position', 'content', 'embedding'],
+                    ['document_id', 'user_id', 'position', 'section', 'content', 'embedding'],
                     DB::table('chunks')
-                        ->selectRaw('?, ?, position, content, embedding', [$copy->id, $guest->id])
+                        ->selectRaw('?, ?, position, section, content, embedding', [$copy->id, $guest->id])
                         ->where('document_id', $source->id),
                 );
             }
