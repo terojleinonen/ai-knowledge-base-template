@@ -4,11 +4,11 @@ import type { Source } from '../lib/types'
 /**
  * Renders an answer: a small, safe Markdown subset (paragraphs, headings, bullet and
  * numbered lists, **bold**, *italic*, `code`; no _underscore_ italics, which would mangle snake_case) with [n] citation markers turned into
- * links to their sources. No HTML is ever injected.
+ * buttons that open their source (onCite). No HTML is ever injected.
  */
-export function AnswerText({ content, sources, messageId }: { content: string; sources: Source[]; messageId: number }) {
-  const known = new Set(sources.map((s) => s.index))
-  const inline = (text: string, key: string) => renderInline(text, key, known, messageId)
+export function AnswerText({ content, sources, onCite }: { content: string; sources: Source[]; onCite?: (source: Source) => void }) {
+  const known = new Map(sources.map((s) => [s.index, s]))
+  const inline = (text: string, key: string) => renderInline(text, key, known, onCite)
 
   return <div className="space-y-3 leading-relaxed">{blocks(content).map((block, i) => renderBlock(block, `b${i}`, inline))}</div>
 }
@@ -81,7 +81,10 @@ function renderBlock(block: Block, key: string, inline: (text: string, key: stri
 
 const INLINE = /(\[\d+(?:\s*,\s*\d+)*\]|\*\*[^*]+\*\*|`[^`]+`|\*[^*\s][^*]*\*)/g
 
-function renderInline(text: string, key: string, known: Set<number>, messageId: number): ReactNode[] {
+const CITATION_CLASS =
+  'mx-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded bg-indigo-100 px-1 align-text-top text-xs font-semibold text-indigo-700'
+
+function renderInline(text: string, key: string, known: Map<number, Source>, onCite?: (source: Source) => void): ReactNode[] {
   return text.split(INLINE).flatMap((part, i): ReactNode[] => {
     const k = `${key}-${i}`
 
@@ -91,22 +94,29 @@ function renderInline(text: string, key: string, known: Set<number>, messageId: 
     if (citation) {
       const numbers = citation[1].split(',').map((n) => Number(n.trim()))
       if (numbers.every((n) => known.has(n))) {
-        return numbers.map((n) => (
-          <a
-            key={`${k}-${n}`}
-            href={`#source-${messageId}-${n}`}
-            className="mx-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded bg-indigo-100 px-1 align-text-top text-xs font-semibold text-indigo-700 hover:bg-indigo-200"
-            aria-label={`Source ${n}`}
-          >
-            {n}
-          </a>
-        ))
+        return numbers.map((n) =>
+          onCite ? (
+            <button
+              key={`${k}-${n}`}
+              type="button"
+              onClick={() => onCite(known.get(n)!)}
+              className={`${CITATION_CLASS} cursor-pointer hover:bg-indigo-200 focus-visible:outline-2 focus-visible:outline-indigo-600`}
+              aria-label={`Source ${n}`}
+            >
+              {n}
+            </button>
+          ) : (
+            <span key={`${k}-${n}`} className={CITATION_CLASS} aria-label={`Source ${n}`}>
+              {n}
+            </span>
+          ),
+        )
       }
       return [part]
     }
 
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
-      return [<strong key={k}>{renderInline(part.slice(2, -2), k, known, messageId)}</strong>]
+      return [<strong key={k}>{renderInline(part.slice(2, -2), k, known, onCite)}</strong>]
     }
     if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
       return [
@@ -116,7 +126,7 @@ function renderInline(text: string, key: string, known: Set<number>, messageId: 
       ]
     }
     if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
-      return [<em key={k}>{renderInline(part.slice(1, -1), k, known, messageId)}</em>]
+      return [<em key={k}>{renderInline(part.slice(1, -1), k, known, onCite)}</em>]
     }
 
     return [part]

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { AnswerText } from '../components/AnswerText'
+import { PassagePanel } from '../components/PassagePanel'
 import { plainText } from '../lib/markdown'
 import { Alert, Button, Spinner } from '../components/ui'
 import { useConversation } from '../hooks/conversations'
@@ -16,6 +17,8 @@ export function ChatPage() {
   const documents = useDocuments()
   const { ask, stop, streaming, error } = useStreamingAnswer()
   const [question, setQuestion] = useState('')
+  const [cited, setCited] = useState<Source | null>(null)
+  const closePassage = useCallback(() => setCited(null), [])
   const bottom = useRef<HTMLDivElement>(null)
 
   const messages = conversationId ? (conversation.data?.messages ?? []) : []
@@ -75,10 +78,10 @@ export function ChatPage() {
           {conversation.isError && <Alert>{conversation.error.message}</Alert>}
 
           {messages.map((m) => (
-            <ChatMessage key={m.id} message={m} />
+            <ChatMessage key={m.id} message={m} onCite={setCited} />
           ))}
 
-          {streaming && <StreamingMessage state={streaming} />}
+          {streaming && <StreamingMessage state={streaming} onCite={setCited} />}
 
           {error && <Alert>{error}</Alert>}
           <div ref={bottom} />
@@ -111,6 +114,8 @@ export function ChatPage() {
           )}
         </div>
       </form>
+
+      {cited && <PassagePanel source={cited} onClose={closePassage} />}
     </div>
   )
 }
@@ -123,7 +128,7 @@ function UserBubble({ content }: { content: string }) {
   )
 }
 
-function StreamingMessage({ state }: { state: StreamingState }) {
+function StreamingMessage({ state, onCite }: { state: StreamingState; onCite: (source: Source) => void }) {
   return (
     <>
       <UserBubble content={state.question} />
@@ -133,7 +138,7 @@ function StreamingMessage({ state }: { state: StreamingState }) {
         </div>
       ) : (
         <article className="rounded-2xl bg-white px-5 py-4 shadow-xs ring-1 ring-slate-200" aria-live="polite" aria-busy="true">
-          <AnswerText content={state.text} sources={state.sources} messageId={0} />
+          <AnswerText content={state.text} sources={state.sources} onCite={onCite} />
           <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-indigo-500 align-text-bottom" aria-hidden="true" />
         </article>
       )}
@@ -141,24 +146,24 @@ function StreamingMessage({ state }: { state: StreamingState }) {
   )
 }
 
-function ChatMessage({ message }: { message: Message }) {
+function ChatMessage({ message, onCite }: { message: Message; onCite: (source: Source) => void }) {
   if (message.role === 'user') return <UserBubble content={message.content} />
 
   return (
     <article className="rounded-2xl bg-white px-5 py-4 shadow-xs ring-1 ring-slate-200">
-      <AnswerText content={message.content} sources={message.sources} messageId={message.id} />
-      {message.sources.length > 0 && <SourceList sources={message.sources} messageId={message.id} />}
+      <AnswerText content={message.content} sources={message.sources} onCite={onCite} />
+      {message.sources.length > 0 && <SourceList sources={message.sources} onCite={onCite} />}
     </article>
   )
 }
 
-function SourceList({ sources, messageId }: { sources: Source[]; messageId: number }) {
+function SourceList({ sources, onCite }: { sources: Source[]; onCite: (source: Source) => void }) {
   return (
     <details className="mt-4 border-t border-slate-100 pt-3">
       <summary className="cursor-pointer text-xs font-semibold tracking-wide text-slate-500 uppercase">{sources.length} sources</summary>
       <ol className="mt-3 space-y-3">
         {sources.map((s) => (
-          <li key={s.index} id={`source-${messageId}-${s.index}`} className="scroll-mt-4 text-sm">
+          <li key={s.index} className="text-sm">
             <p className="font-medium text-slate-800">
               <span className="mr-1.5 inline-flex size-5 items-center justify-center rounded bg-indigo-100 text-xs font-semibold text-indigo-700">
                 {s.index}
@@ -167,6 +172,13 @@ function SourceList({ sources, messageId }: { sources: Source[]; messageId: numb
               <span className="ml-2 text-xs font-normal text-slate-400">relevance {Math.round(s.score * 100)}%</span>
             </p>
             <p className="mt-1 text-slate-600">{plainText(s.excerpt)}</p>
+            <button
+              type="button"
+              onClick={() => onCite(s)}
+              className="mt-1 text-xs font-semibold text-indigo-600 hover:text-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600"
+            >
+              Read in context
+            </button>
           </li>
         ))}
       </ol>

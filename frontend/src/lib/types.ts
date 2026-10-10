@@ -42,6 +42,18 @@ export interface Source {
   score: number
 }
 
+export interface Passage {
+  chunk_id: number
+  document: { id: number; title: string }
+  /** 0-based position of the passage in its document, of `total`. */
+  position: number
+  total: number
+  /** Text just before and after the passage, without the overlap between chunks. */
+  before: string[]
+  content: string
+  after: string[]
+}
+
 export interface Message {
   id: number
   conversation_id: number
