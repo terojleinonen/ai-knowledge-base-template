@@ -75,6 +75,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Follow-up questions
+    |--------------------------------------------------------------------------
+    |
+    | "How long must they be?" can't be searched on its own. "rewrite" asks a model to
+    | make it standalone from the conversation (one small extra call per follow-up;
+    | provider/model default to the chat model's), "combine" searches with the previous
+    | question prepended (free), "off" searches with the message as typed.
+    |
+    */
+
+    'follow_ups' => [
+        'mode' => env('KB_FOLLOW_UP_MODE', 'rewrite'),
+        'provider' => env('KB_FOLLOW_UP_PROVIDER') ?: null,
+        'model' => env('KB_FOLLOW_UP_MODEL') ?: null,
+        'timeout' => (int) env('KB_FOLLOW_UP_TIMEOUT', 20),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Reranking (optional)
     |--------------------------------------------------------------------------
     |

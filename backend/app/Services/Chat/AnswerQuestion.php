@@ -34,6 +34,7 @@ class AnswerQuestion
     public function __construct(
         private readonly Retriever $retriever,
         private readonly CitationRepairer $citations,
+        private readonly StandaloneQuestion $standalone,
     ) {}
 
     /**
@@ -43,7 +44,7 @@ class AnswerQuestion
      */
     public function __invoke(User $user, string $question, ?Conversation $conversation = null, ?array $documentIds = null): Message
     {
-        $results = $this->retrieve($user, $question, $documentIds);
+        $results = $this->retrieve($user, $question, $conversation, $documentIds);
 
         if ($results === []) {
             return $this->persist($user, $conversation, $question, self::NO_CONTEXT_ANSWER, $results);
@@ -77,7 +78,7 @@ class AnswerQuestion
     public function stream(User $user, string $question, ?Conversation $conversation = null, ?array $documentIds = null): Generator
     {
         try {
-            $results = $this->retrieve($user, $question, $documentIds);
+            $results = $this->retrieve($user, $question, $conversation, $documentIds);
         } catch (Throwable $e) {
             report($e);
 
@@ -161,12 +162,21 @@ class AnswerQuestion
     }
 
     /**
+     * The query the documents are searched with: the question itself, or for a follow-up
+     * in a conversation, a standalone version of it.
+     */
+    public function searchQuery(string $question, ?Conversation $conversation): string
+    {
+        return $conversation ? $this->standalone->for($question, $this->history($conversation)) : $question;
+    }
+
+    /**
      * @param  list<int>|null  $documentIds
      * @return list<SearchResult>
      */
-    private function retrieve(User $user, string $question, ?array $documentIds): array
+    private function retrieve(User $user, string $question, ?Conversation $conversation, ?array $documentIds): array
     {
-        return $this->retriever->retrieve($user->id, $question, $documentIds);
+        return $this->retriever->retrieve($user->id, $this->searchQuery($question, $conversation), $documentIds);
     }
 
     private function agent(?Conversation $conversation): KnowledgeBaseAssistant

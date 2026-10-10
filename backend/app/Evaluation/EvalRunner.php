@@ -2,6 +2,8 @@
 
 namespace App\Evaluation;
 
+use App\Enums\MessageRole;
+use App\Models\Conversation;
 use App\Models\User;
 use App\Services\Chat\AnswerQuestion;
 use App\Services\Chat\CitationRepairer;
@@ -99,9 +101,11 @@ class EvalRunner
     private function evaluate(User $user, CaseResult $result, bool $withAnswers): CaseResult
     {
         $case = $result->case;
+        $conversation = $this->conversation($user, $case->after, $withAnswers);
 
         $start = hrtime(true);
-        $hits = $this->retriever->retrieve($user->id, $case->question);
+        $result->searchQuery = $this->answerQuestion->searchQuery($case->question, $conversation);
+        $hits = $this->retriever->retrieve($user->id, $result->searchQuery);
         $result->retrievalMs = (hrtime(true) - $start) / 1e6;
 
         $result->retrievedDocuments = array_map(fn (SearchResult $hit) => $hit->documentTitle, $hits);
@@ -119,7 +123,7 @@ class EvalRunner
         }
 
         $start = hrtime(true);
-        $message = ($this->answerQuestion)($user, $case->question);
+        $message = ($this->answerQuestion)($user, $case->question, $conversation);
         $result->answerMs = (hrtime(true) - $start) / 1e6;
         $result->answer = $message->content;
 
@@ -149,6 +153,43 @@ class EvalRunner
         }
 
         return $result;
+    }
+
+    /**
+     * The conversation a follow-up question is asked in. With answers, the earlier questions
+     * are answered for real (not counted towards the case); otherwise only they are stored.
+     *
+     * @param  list<string>  $earlier
+     */
+    private function conversation(User $user, array $earlier, bool $withAnswers): ?Conversation
+    {
+        if ($earlier === []) {
+            return null;
+        }
+
+        if ($withAnswers) {
+            $current = $this->current;
+            $this->current = null;
+            $conversation = null;
+
+            try {
+                foreach ($earlier as $question) {
+                    $conversation = ($this->answerQuestion)($user, $question, $conversation)->conversation;
+                }
+            } finally {
+                $this->current = $current;
+            }
+
+            return $conversation;
+        }
+
+        $conversation = $user->conversations()->create(['title' => Str::limit($earlier[0], 80)]);
+
+        foreach ($earlier as $question) {
+            $conversation->messages()->create(['role' => MessageRole::User, 'content' => $question]);
+        }
+
+        return $conversation;
     }
 
     /**

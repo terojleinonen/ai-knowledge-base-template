@@ -31,7 +31,8 @@ Upload ─▶ store file ─▶ ProcessDocument job (queue)
                           ├─ embed chunks in batches
                           └─ save chunks + vectors ─▶ status: ready
 
-Question ─▶ vector search (cosine) + keyword search (BM25) over the user's chunks
+Question ─▶ follow-up? rewrite it as a standalone question from the conversation
+         ─▶ vector search (cosine) + keyword search (BM25) over the user's chunks
          ─▶ merge by reciprocal rank fusion ─▶ optional reranker ─▶ top-k
          ─▶ prompt LLM with numbered sources + recent chat history
          ─▶ answer streamed token-by-token (SSE) with [n] citations
@@ -42,6 +43,7 @@ Question ─▶ vector search (cosine) + keyword search (BM25) over the user's c
 - If nothing relevant is found, the API answers without calling the LLM, which saves cost and avoids hallucinations.
 - Citations are checked after generation (`CitationRepairer`). Each sentence is matched against the source passages by distinctive shared words and numbers. Wrong or non-existent source numbers are corrected, missing ones are added, and "not in the sources" sentences are left uncited. This matters most for small local models, which often get the facts right but the numbers wrong. Streamed text shows the model's raw citations until the answer completes.
 - Retrieval is hybrid (`Retriever`). Vector search finds passages that mean the same thing in other words, and BM25 keyword search finds exact terms that embeddings blur: product codes, names, numbers ("IP54", "LTE-M", "1Password"). The two rankings are merged with reciprocal rank fusion. Without a reranker, a passage is kept if its vector score passes `KB_RETRIEVAL_MIN_SCORE` or it contains most of the question's distinctive terms. With a reranker (Jina, Cohere or Voyage AI), the reranker orders the merged candidates. If it fails or its free quota runs out, the answer still comes, ranked without it.
+- Follow-up questions are made searchable. "How long must they be?" means nothing to search on its own, so a small model call rewrites it from the conversation ("How long must the passwords be?"). The chat model still answers the question as typed, with the conversation as context. On the sample set's follow-up cases, rewriting found the right document first every time, against 92% when searching with the message alone. It adds about a second and a few hundred tokens per follow-up. `KB_FOLLOW_UP_MODE=combine` prepends the previous question instead (free, slightly worse). If a rewrite fails, the combined question is used.
 - Vectors are stored as compact float32 in the regular database (`DatabaseVectorStore`), so any database works with zero extra infrastructure. The `VectorStore` interface lets you swap in pgvector or Qdrant when you outgrow brute-force search (roughly tens of thousands of chunks per user).
 - Each document records which embedding model indexed it, so switching models never compares incompatible vectors. Run `php artisan kb:reindex` after switching.
 
@@ -144,6 +146,8 @@ All settings are in `backend/config/knowledge.php` and can be overridden via env
 | `KB_CHUNK_SIZE` / `KB_CHUNK_OVERLAP` | `1200` / `200` | Chunking (characters) |
 | `KB_RETRIEVAL_TOP_K` / `KB_RETRIEVAL_MIN_SCORE` | `6` / `0.2` | Retrieval |
 | `KB_RETRIEVAL_MODE` | `hybrid` | `hybrid` (vector + keyword) or `vector` |
+| `KB_FOLLOW_UP_MODE` | `rewrite` | Follow-up questions: `rewrite`, `combine` or `off` |
+| `KB_FOLLOW_UP_PROVIDER` / `KB_FOLLOW_UP_MODEL` | chat model | Model that rewrites follow-ups (demo: `anthropic` / `claude-haiku-5-5`) |
 | `KB_RERANK_PROVIDER` / `KB_RERANK_MODEL` | off | Optional reranker, e.g. `jina` / `jina-reranker-v2-base-multilingual` (needs `JINA_API_KEY`) |
 | `KB_RERANK_MIN_SCORE` | none | Drop passages the reranker scores below this; unset = reorder only (demo: `0.12`) |
 | `KB_UPLOAD_MAX_KB` | `20480` | Max upload size |
@@ -187,12 +191,13 @@ Each run ingests the dataset's documents under a throwaway user and deletes it, 
   "documents": ["handbook.pdf", "faq.md"],
   "cases": [
     { "question": "How many vacation days?", "expect_documents": ["handbook"], "facts": ["30", ["10", "ten"]] },
+    { "question": "Can I carry some over?", "after": ["How many vacation days?"], "expect_documents": ["handbook"], "facts": ["10"] },
     { "question": "What is the capital of France?", "unanswerable": true }
   ]
 }
 ```
 
-`expect_documents` uses file names without extensions. Each entry in `facts` must appear in the answer; an inner list means any of those alternatives counts. Use it after changing models, prompts, chunking or `KB_RETRIEVAL_MIN_SCORE`.
+`expect_documents` uses file names without extensions. Each entry in `facts` must appear in the answer; an inner list means any of those alternatives counts. `after` makes a case a follow-up: the earlier questions are asked first in the same conversation (answered for real in a full run, not counted towards the case). Use it after changing models, prompts, chunking or `KB_RETRIEVAL_MIN_SCORE`.
 
 ## API
 
@@ -316,6 +321,7 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - Public demo: guest accounts with sample documents, cost caps, per-visitor abuse limits, daily end-to-end check
 - Durable uploads on Cloudflare R2 (any S3-compatible storage works)
 - Bot protection with Cloudflare Turnstile
+- Follow-up questions rewritten into standalone search queries
 - Hybrid search (vector + BM25 keyword) with a reranker whose cutoff turns away 74% of uncovered questions before any model call
 
 ### Next

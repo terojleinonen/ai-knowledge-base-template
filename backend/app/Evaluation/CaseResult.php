@@ -7,6 +7,9 @@ final class CaseResult
     /** 1-based rank of the first chunk from an expected document, or null if none was retrieved. */
     public ?int $rank = null;
 
+    /** What the documents were searched with (differs from the question for follow-ups). */
+    public ?string $searchQuery = null;
+
     /** @var list<string> */
     public array $retrievedDocuments = [];
 
@@ -78,6 +81,7 @@ final class CaseResult
             'unanswerable' => $this->case->unanswerable,
             'expect_documents' => $this->case->expectDocuments,
             'passed' => $this->passed(),
+            'search_query' => $this->searchQuery,
             'rank' => $this->rank,
             'top_score' => round($this->topScore, 4),
             'retrieved_documents' => $this->retrievedDocuments,
