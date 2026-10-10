@@ -195,6 +195,129 @@
       ]
     },
     {
+      "question": "How long must they be?",
+      "after": [
+        "Which password manager must we use?"
+      ],
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [
+        "16"
+      ]
+    },
+    {
+      "question": "And what does it cost?",
+      "after": [
+        "How long does the Aurora node battery last?"
+      ],
+      "expect_documents": [
+        "aurora-product-spec"
+      ],
+      "facts": [
+        "149"
+      ]
+    },
+    {
+      "question": "How quickly will they respond?",
+      "after": [
+        "Where do I report a phishing email?"
+      ],
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [
+        [
+          "one hour",
+          "1 hour"
+        ]
+      ]
+    },
+    {
+      "question": "How accurate is it?",
+      "after": [
+        "What is the CO2 measurement range of the Aurora sensor?"
+      ],
+      "expect_documents": [
+        "aurora-product-spec"
+      ],
+      "facts": [
+        [
+          "30 ppm"
+        ]
+      ]
+    },
+    {
+      "question": "Which day do I have to be there?",
+      "after": [
+        "How many days per week can I work remotely?"
+      ],
+      "expect_documents": [
+        "employee-handbook"
+      ],
+      "facts": [
+        "Tuesday"
+      ]
+    },
+    {
+      "question": "Do I also get paid days for that?",
+      "after": [
+        "What is the annual learning budget?"
+      ],
+      "expect_documents": [
+        "employee-handbook"
+      ],
+      "facts": [
+        [
+          "five",
+          "5"
+        ]
+      ]
+    },
+    {
+      "question": "Can I keep the ones I don't use?",
+      "after": [
+        "How many vacation days do employees get per year?"
+      ],
+      "expect_documents": [
+        "employee-handbook"
+      ],
+      "facts": [
+        "10"
+      ]
+    },
+    {
+      "question": "Is there a warranty?",
+      "after": [
+        "What does the Aurora Gateway cost?"
+      ],
+      "expect_documents": [
+        "aurora-product-spec"
+      ],
+      "facts": [
+        [
+          "3-year",
+          "3 year",
+          "three-year",
+          "three year",
+          "3 years",
+          "three years"
+        ]
+      ]
+    },
+    {
+      "question": "Which password manager must we use?",
+      "after": [
+        "How many vacation days do employees get per year?"
+      ],
+      "expect_documents": [
+        "security-policy"
+      ],
+      "facts": [
+        "1Password"
+      ]
+    },
+    {
       "question": "What is the capital of France?",
       "unanswerable": true
     },
@@ -268,6 +391,20 @@
     },
     {
       "question": "How do I expense a taxi?",
+      "unanswerable": true
+    },
+    {
+      "question": "Does it support Zigbee too?",
+      "after": [
+        "How long does the Aurora node battery last?"
+      ],
+      "unanswerable": true
+    },
+    {
+      "question": "And which VPN?",
+      "after": [
+        "Which password manager must we use?"
+      ],
       "unanswerable": true
     }
   ]

@@ -166,3 +166,36 @@ it('aborts cleanly when a document cannot be ingested', function () {
     array_map('unlink', glob("{$dir}/*"));
     rmdir($dir);
 });
+
+it('asks follow-up cases inside a conversation', function (bool $withAnswers) {
+    $dir = sys_get_temp_dir().'/eval-'.uniqid();
+    mkdir($dir);
+    copy("{$this->dataset}/security.txt", "{$dir}/security.txt");
+    file_put_contents("{$dir}/cases.json", json_encode([
+        'documents' => ['security.txt'],
+        'cases' => [[
+            'question' => 'Is that minimum enforced?',
+            'after' => ['How many characters must passwords have?'],
+            'expect_documents' => ['security'],
+            'facts' => ['sixteen'],
+        ]],
+    ]));
+    KnowledgeBaseAssistant::fake(['Sixteen characters minimum [1].', 'Yes, sixteen characters [1].']);
+    $json = tempnam(sys_get_temp_dir(), 'eval');
+
+    $this->artisan('kb:eval', ['dataset' => $dir, '--retrieval-only' => ! $withAnswers, '--json' => $json])->assertSuccessful();
+
+    $case = json_decode(file_get_contents($json), true)['cases'][0];
+
+    expect($case['search_query'])->toBe("How many characters must passwords have?\nIs that minimum enforced?")
+        ->and($case['rank'])->toBe(1)
+        ->and($case['model_calls'])->toBe($withAnswers ? 1 : 0); // the earlier question isn't counted
+
+    if ($withAnswers) {
+        expect($case['answer'])->toBe('Yes, sixteen characters [1].');
+        KnowledgeBaseAssistant::assertPrompted(fn ($prompt) => $prompt->contains('Question: Is that minimum enforced?'));
+    }
+
+    array_map('unlink', [...glob("{$dir}/*"), $json]);
+    rmdir($dir);
+})->with(['retrieval only' => false, 'with answers' => true]);

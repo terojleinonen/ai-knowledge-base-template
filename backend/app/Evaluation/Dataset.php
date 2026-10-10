@@ -13,6 +13,7 @@ use InvalidArgumentException;
  *   "documents": ["employee-handbook.md", "security-policy.docx"],
  *   "cases": [
  *     {"question": "How many vacation days?", "expect_documents": ["employee-handbook"], "facts": ["30", ["10", "ten"]]},
+ *     {"question": "And how many carry over?", "after": ["How many vacation days?"], "expect_documents": ["employee-handbook"]},
  *     {"question": "What is the capital of France?", "unanswerable": true}
  *   ]
  * }
@@ -53,6 +54,8 @@ final readonly class Dataset
             'cases.*.expect_documents.*' => ['string'],
             'cases.*.facts' => ['sometimes', 'array'],
             'cases.*.unanswerable' => ['sometimes', 'boolean'],
+            'cases.*.after' => ['sometimes', 'array'],
+            'cases.*.after.*' => ['string'],
         ]);
 
         if ($validator->fails()) {
@@ -88,6 +91,7 @@ final readonly class Dataset
                 expectDocuments: array_values($case['expect_documents'] ?? []),
                 facts: array_map(fn ($fact) => array_values((array) $fact), $case['facts'] ?? []),
                 unanswerable: (bool) ($case['unanswerable'] ?? false),
+                after: array_values($case['after'] ?? []),
             );
         }
 
