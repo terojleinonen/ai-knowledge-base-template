@@ -169,8 +169,10 @@ def main():
     #    reranker is down or its free tokens have run out.
     status, _, body = request("POST", f"{api}/api/chat", {"question": "What is the dress code?"}, auth, timeout=90)
     answer = json.loads(body).get("data", {}) if status == 201 else {}
-    check("reranker filters uncovered questions", status == 201 and answer.get("sources") == [],
-          f"HTTP {status}: {body[:160]}" if status != 201 else "sources were sent to the chat model; check JINA_API_KEY and Jina token balance")
+    filtered = status == 201 and answer.get("sources") == []
+    check("reranker filters uncovered questions", filtered,
+          "" if filtered else f"HTTP {status}: {body[:160]}" if status != 201
+          else "sources were sent to the chat model; check JINA_API_KEY and the Jina token balance")
 
     # 8. Optional: one real question through the chat model.
     if args.ask:
