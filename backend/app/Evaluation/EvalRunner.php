@@ -3,6 +3,7 @@
 namespace App\Evaluation;
 
 use App\Enums\MessageRole;
+use App\Models\Chunk;
 use App\Models\Conversation;
 use App\Models\User;
 use App\Services\Chat\AnswerQuestion;
@@ -58,10 +59,13 @@ class EvalRunner
         try {
             $this->ingest($user, $dataset->documents);
 
+            $passages = Chunk::where('user_id', $user->id)->pluck('content')->map(self::normalize(...))->all();
             $results = [];
 
             foreach (array_slice($dataset->cases, 0, $limit) as $i => $case) {
                 $this->current = new CaseResult($case);
+                $this->current->unknownEvidence = array_values(array_filter(array_merge(...$case->evidence),
+                    fn (string $e) => ! array_filter($passages, fn (string $p) => str_contains($p, self::normalize($e)))));
                 $results[] = $result = $this->evaluate($user, $this->current, $withAnswers);
                 $onResult?->__invoke($result, $i + 1);
             }
@@ -118,6 +122,16 @@ class EvalRunner
             }
         }
 
+        $retrieved = array_map(fn (SearchResult $hit) => $hit->content, $hits);
+        $result->evidenceFound = count(array_filter($case->evidence, fn (array $group) => $this->containsEvidence($retrieved, $group)));
+
+        foreach ($retrieved as $i => $content) {
+            if ($this->hasEvidence($content, array_merge(...$case->evidence))) {
+                $result->evidenceRank = $i + 1;
+                break;
+            }
+        }
+
         if (! $withAnswers) {
             return $result;
         }
@@ -139,15 +153,20 @@ class EvalRunner
         }
 
         $sources = collect($message->sources ?? [])->keyBy('index');
+        $cited = Chunk::whereIn('id', $sources->pluck('chunk_id'))->pluck('content', 'id');
         preg_match_all('/\[(\d+(?:\s*,\s*\d+)*)\]/', $message->content, $matches);
 
         foreach ($matches[1] as $group) {
             foreach (explode(',', $group) as $n) {
                 $result->citations++;
-                $title = $sources->get((int) trim($n))['document_title'] ?? null;
+                $source = $sources->get((int) trim($n));
 
-                if (in_array($title, $case->expectDocuments, true)) {
+                if (in_array($source['document_title'] ?? null, $case->expectDocuments, true)) {
                     $result->correctCitations++;
+                }
+
+                if ($source !== null && $this->hasEvidence((string) $cited->get($source['chunk_id']), array_merge(...$case->evidence))) {
+                    $result->evidenceCitations++;
                 }
             }
         }
@@ -190,6 +209,33 @@ class EvalRunner
         }
 
         return $conversation;
+    }
+
+    /**
+     * Whether any passage contains any of the alternatives.
+     *
+     * @param  list<string>  $passages
+     * @param  list<string>  $alternatives
+     */
+    private function containsEvidence(array $passages, array $alternatives): bool
+    {
+        return collect($passages)->contains(fn (string $p) => $this->hasEvidence($p, $alternatives));
+    }
+
+    /**
+     * @param  list<string>  $evidence
+     */
+    private function hasEvidence(string $passage, array $evidence): bool
+    {
+        return collect($evidence)->contains(fn (string $e) => str_contains(self::normalize($passage), self::normalize($e)));
+    }
+
+    /**
+     * Lowercase with whitespace collapsed, so evidence matches across line wraps.
+     */
+    private static function normalize(string $text): string
+    {
+        return mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $text)));
     }
 
     /**

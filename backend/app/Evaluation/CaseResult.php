@@ -7,6 +7,18 @@ final class CaseResult
     /** 1-based rank of the first chunk from an expected document, or null if none was retrieved. */
     public ?int $rank = null;
 
+    /** Rank of the first retrieved passage containing any of the case's evidence. */
+    public ?int $evidenceRank = null;
+
+    /** How many of the case's evidence strings appear in the retrieved passages. */
+    public int $evidenceFound = 0;
+
+    /** Citations pointing to a passage that contains evidence. */
+    public int $evidenceCitations = 0;
+
+    /** @var list<string> evidence that appears in none of the dataset's passages (a mistake in the case) */
+    public array $unknownEvidence = [];
+
     /** What the documents were searched with (differs from the question for follow-ups). */
     public ?string $searchQuery = null;
 
@@ -41,6 +53,11 @@ final class CaseResult
 
     public function __construct(public readonly EvalCase $case) {}
 
+    public function evidenceTotal(): int
+    {
+        return count($this->case->evidence);
+    }
+
     public function factsTotal(): int
     {
         return count($this->case->facts);
@@ -57,7 +74,7 @@ final class CaseResult
             return $this->answer === null ? null : $this->abstained;
         }
 
-        if ($this->rank === null) {
+        if ($this->rank === null || $this->evidenceFound < $this->evidenceTotal()) {
             return false;
         }
 
@@ -81,8 +98,13 @@ final class CaseResult
             'unanswerable' => $this->case->unanswerable,
             'expect_documents' => $this->case->expectDocuments,
             'passed' => $this->passed(),
+            'tags' => $this->case->tags,
             'search_query' => $this->searchQuery,
             'rank' => $this->rank,
+            'evidence_rank' => $this->evidenceRank,
+            'evidence_found' => $this->evidenceFound,
+            'evidence_total' => $this->evidenceTotal(),
+            'unknown_evidence' => $this->unknownEvidence,
             'top_score' => round($this->topScore, 4),
             'retrieved_documents' => $this->retrievedDocuments,
             'retrieval_ms' => round($this->retrievalMs),
@@ -97,6 +119,7 @@ final class CaseResult
             'abstained' => $this->abstained,
             'citations' => $this->citations,
             'correct_citations' => $this->correctCitations,
+            'evidence_citations' => $this->evidenceCitations,
         ];
     }
 }

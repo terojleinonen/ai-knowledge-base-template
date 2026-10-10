@@ -63,7 +63,9 @@ class EvaluateKnowledgeBase extends Command
         }
 
         $summary = Summary::of($results);
+        $byTag = Summary::byTag($results);
         $this->printSummary($summary, $withAnswers);
+        $this->printTags($byTag);
 
         if ($file = $this->option('json')) {
             file_put_contents($file, json_encode([
@@ -71,6 +73,7 @@ class EvaluateKnowledgeBase extends Command
                 'ran_at' => now()->toIso8601String(),
                 'settings' => $settings,
                 'summary' => $summary,
+                'by_tag' => $byTag,
                 'cases' => array_map(fn (CaseResult $r) => $r->toArray(), $results),
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION));
 
@@ -113,6 +116,11 @@ class EvaluateKnowledgeBase extends Command
             $details[] = $r->retrievedDocuments === [] ? 'filtered by retrieval' : sprintf('retrieved (top %.2f)', $r->topScore);
         } else {
             $details[] = $r->rank === null ? '<fg=red>expected doc not retrieved</>' : "rank {$r->rank}";
+
+            if ($r->evidenceTotal() > 0) {
+                $evidence = "evidence {$r->evidenceFound}/{$r->evidenceTotal()}";
+                $details[] = $r->evidenceFound < $r->evidenceTotal() ? "<fg=red>{$evidence}</>" : $evidence;
+            }
         }
 
         if ($r->answer !== null) {
@@ -120,7 +128,8 @@ class EvaluateKnowledgeBase extends Command
                 $details[] = $r->abstained ? 'abstained' : '<fg=red>answered anyway</>';
             } else {
                 $details[] = "facts {$r->factsFound}/{$r->factsTotal()}";
-                $details[] = "citations {$r->correctCitations}/{$r->citations}";
+                $details[] = "citations {$r->correctCitations}/{$r->citations}"
+                    .($r->evidenceTotal() > 0 ? " (passage {$r->evidenceCitations})" : '');
 
                 if ($r->abstained) {
                     $details[] = '<fg=red>abstained</>';
@@ -135,11 +144,33 @@ class EvaluateKnowledgeBase extends Command
             implode(' · ', $details),
         );
 
+        if ($r->unknownEvidence !== []) {
+            $this->line('        <fg=yellow>evidence not in any passage (fix the case):</> '.implode(' | ', $r->unknownEvidence));
+        }
+
         if ($r->passed() === false && $r->answer !== null) {
             if ($r->missingFacts !== []) {
                 $this->line('        <fg=gray>missing:</> '.implode(', ', $r->missingFacts));
             }
             $this->line('        <fg=gray>answer:</>  '.Str::limit(str_replace("\n", ' ', $r->answer), 200));
+        }
+    }
+
+    /**
+     * @param  array<string, array{cases: int, passed: int, judged: int, evidence_recall: float|null}>  $byTag
+     */
+    private function printTags(array $byTag): void
+    {
+        if ($byTag === []) {
+            return;
+        }
+
+        $this->newLine();
+        $this->components->twoColumnDetail('<options=bold>By question type</>', '<options=bold>passed · evidence recall</>');
+
+        foreach ($byTag as $tag => $t) {
+            $this->components->twoColumnDetail($tag." <fg=gray>({$t['cases']})</>", sprintf('%d/%d · %s', $t['passed'], $t['judged'],
+                $t['evidence_recall'] === null ? 'n/a' : sprintf('%.0f%%', $t['evidence_recall'] * 100)));
         }
     }
 
@@ -156,6 +187,11 @@ class EvaluateKnowledgeBase extends Command
         $this->components->twoColumnDetail('Hit@1 (right document ranked first)', $pct($s['hit_at_1']));
         $this->components->twoColumnDetail('Hit@k (right document retrieved at all)', $pct($s['hit_at_k']));
         $this->components->twoColumnDetail('MRR', $s['mrr'] === null ? 'n/a' : sprintf('%.2f', $s['mrr']));
+
+        if ($s['evidence_recall'] !== null) {
+            $this->components->twoColumnDetail('Evidence recall (answering passages retrieved)', $pct($s['evidence_recall']));
+            $this->components->twoColumnDetail('Evidence passage ranked first', $pct($s['evidence_hit_at_1']));
+        }
         $this->components->twoColumnDetail('Unanswerable questions filtered by retrieval', $pct($s['off_topic_filtered']));
         $this->components->twoColumnDetail('Latency p50', $ms($s['retrieval_ms_p50']));
 
@@ -164,6 +200,9 @@ class EvaluateKnowledgeBase extends Command
             $this->components->twoColumnDetail('<options=bold>Answers</>');
             $this->components->twoColumnDetail('Fact recall', $pct($s['fact_recall']));
             $this->components->twoColumnDetail('Citation precision (cited the right document)', $pct($s['citation_precision']));
+            if ($s['passage_citation_precision'] !== null) {
+                $this->components->twoColumnDetail('Passage citation precision (cited the evidence)', $pct($s['passage_citation_precision']));
+            }
             $this->components->twoColumnDetail('Answers without citations', (string) ($s['uncited_answers'] ?? 'n/a'));
             $this->components->twoColumnDetail('Correct abstentions (unanswerable)', $pct($s['correct_abstentions']));
             $this->components->twoColumnDetail('False abstentions (answerable)', (string) ($s['false_abstentions'] ?? 'n/a'));

@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Agents\KnowledgeBaseAssistant;
+use App\Evaluation\Dataset;
 use App\Evaluation\EvalRunner;
 use App\Models\Document;
 use App\Models\User;
@@ -199,3 +200,57 @@ it('asks follow-up cases inside a conversation', function (bool $withAnswers) {
     array_map('unlink', [...glob("{$dir}/*"), $json]);
     rmdir($dir);
 })->with(['retrieval only' => false, 'with answers' => true]);
+
+it('checks evidence at passage level and reports results by tag', function () {
+    $dir = sys_get_temp_dir().'/eval-'.uniqid();
+    mkdir($dir);
+    copy("{$this->dataset}/security.txt", "{$dir}/security.txt");
+    copy("{$this->dataset}/vacation.txt", "{$dir}/vacation.txt");
+    file_put_contents("{$dir}/cases.json", json_encode([
+        'documents' => ['security.txt', 'vacation.txt'],
+        'cases' => [
+            [
+                'question' => 'Which password manager is approved?',
+                'expect_documents' => ['security'],
+                'facts' => ['1Password'],
+                'evidence' => [['THE APPROVED   password manager is 1Password', 'not used']], // case and spacing don't matter
+                'tags' => ['lookup'],
+            ],
+            [
+                'question' => 'How many characters must passwords have?',
+                'expect_documents' => ['security'],
+                'evidence' => ['sixteen characters minimum', 'this text is in no document'],
+                'tags' => ['lookup', 'numbers'],
+            ],
+        ],
+    ]));
+    KnowledgeBaseAssistant::fake(['The approved password manager is 1Password [1].', 'Sixteen [1].']);
+    $json = tempnam(sys_get_temp_dir(), 'eval');
+
+    $this->artisan('kb:eval', ['dataset' => $dir, '--json' => $json])
+        ->expectsOutputToContain('evidence not in any passage (fix the case): this text is in no document')
+        ->expectsOutputToContain('By question type')
+        ->assertSuccessful();
+
+    $report = json_decode(file_get_contents($json), true);
+    [$first, $second] = $report['cases'];
+
+    expect($first)->toMatchArray(['evidence_found' => 1, 'evidence_total' => 1, 'evidence_rank' => 1, 'evidence_citations' => 1, 'passed' => true])
+        ->and($second)->toMatchArray(['evidence_found' => 1, 'evidence_total' => 2, 'unknown_evidence' => ['this text is in no document'], 'passed' => false])
+        ->and($report['summary']['evidence_recall'])->toBe(2 / 3)
+        ->and($report['summary']['passage_citation_precision'])->toBe(1.0)
+        ->and($report['by_tag'])->toBe([
+            'lookup' => ['cases' => 2, 'passed' => 1, 'judged' => 2, 'evidence_recall' => 2 / 3],
+            'numbers' => ['cases' => 1, 'passed' => 0, 'judged' => 1, 'evidence_recall' => 0.5],
+        ]);
+
+    array_map('unlink', [...glob("{$dir}/*"), $json]);
+    rmdir($dir);
+});
+
+it('loads the bundled datasets', function (string $dataset) {
+    $loaded = Dataset::load(base_path("evals/{$dataset}"));
+
+    expect($loaded->cases)->not->toBeEmpty()
+        ->and(array_map('is_file', $loaded->documents))->each->toBeTrue();
+})->with(['northwind', 'northwind-wiki']);
