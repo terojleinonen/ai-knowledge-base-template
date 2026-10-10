@@ -8,7 +8,7 @@ With Turnstile enabled on the API, set DEMO_MONITOR_TOKEN (= the API's KB_MONITO
 Without --ask it costs no LLM credit: an off-topic question exercises embeddings, the
 database and the chat endpoint, but is filtered out before the chat model is called. A tiny
 upload is stored, indexed, re-indexed from storage and deleted (one small embedding call).
---ask also asks one real question (one chat model call).
+--ask also asks one real question and a follow-up (two chat model calls).
 Exits non-zero if any check fails.
 """
 
@@ -80,7 +80,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--api", required=True)
     parser.add_argument("--web", required=True)
-    parser.add_argument("--ask", action="store_true", help="also ask one real question (one chat model call)")
+    parser.add_argument("--ask", action="store_true", help="also ask a real question and a follow-up (two chat model calls)")
     args = parser.parse_args()
     api, web = args.api.rstrip("/"), args.web.rstrip("/")
 
@@ -183,6 +183,15 @@ def main():
         check("chat model answers with a citation",
               status == 201 and "30" in content and "[" in content and len(answer.get("sources", [])) > 0,
               f"HTTP {status}: {(content or body)[:160]}")
+
+        # 9. A follow-up that can only be found with the conversation's context.
+        if status == 201:
+            status, _, body = request("POST", f"{api}/api/chat",
+                                      {"question": "Can I keep the ones I don't use?",
+                                       "conversation_id": answer.get("conversation_id")}, auth, timeout=120)
+            content = (json.loads(body).get("data", {}) if status == 201 else {}).get("content", "")
+            check("follow-up question uses the conversation", status == 201 and "10" in content,
+                  f"HTTP {status}: {(content or body)[:160]}")
 
 
 if __name__ == "__main__":
