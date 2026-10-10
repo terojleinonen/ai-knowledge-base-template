@@ -349,7 +349,10 @@
       ],
       "facts": [
         "Helsinki",
-        "Friday"
+        [
+          "Friday",
+          "Fridays"
+        ]
       ],
       "evidence": [
         "Dogs are welcome at the Helsinki office on Fridays"
@@ -359,7 +362,7 @@
       ]
     },
     {
-      "question": "What is the daily allowance for a work trip to Italy?",
+      "question": "Italy isn't in the per diem table. How is the daily allowance for a trip there decided?",
       "expect_documents": [
         "travel-and-expense-policy"
       ],

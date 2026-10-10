@@ -12,10 +12,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $document_id
  * @property int $user_id
  * @property int $position
+ * @property string|null $section
  * @property string $content
  * @property string $embedding
  */
-#[Fillable(['document_id', 'user_id', 'position', 'content', 'embedding'])]
+#[Fillable(['document_id', 'user_id', 'position', 'section', 'content', 'embedding'])]
 #[Hidden(['embedding'])]
 class Chunk extends Model
 {

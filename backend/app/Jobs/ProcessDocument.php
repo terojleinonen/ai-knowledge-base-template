@@ -9,6 +9,7 @@ use App\Services\Documents\DocumentProcessingException;
 use App\Services\Documents\TextChunker;
 use App\Services\Documents\TextExtractor;
 use App\Services\Retrieval\Embedder;
+use App\Services\Retrieval\PassageText;
 use App\Services\Retrieval\VectorCodec;
 use App\Services\UsageLimits;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -48,7 +49,7 @@ class ProcessDocument implements ShouldQueue
 
             $contents ?? throw new DocumentProcessingException('The uploaded file could not be found. Please upload it again.');
 
-            $chunks = $chunker->split($extractor->extract($contents, $document->extension()));
+            $chunks = $chunker->chunks($extractor->extract($contents, $document->extension()));
 
             if ($chunks === []) {
                 throw new DocumentProcessingException('No text could be extracted. Scanned PDFs need OCR before upload.');
@@ -69,7 +70,10 @@ class ProcessDocument implements ShouldQueue
             return;
         }
 
-        $vectors = $embedder->embedDocuments($chunks);
+        $vectors = $embedder->embedDocuments(array_map(
+            fn (array $chunk) => PassageText::of($document->title, $chunk['section'], $chunk['content']),
+            $chunks,
+        ));
 
         DB::transaction(function () use ($document, $chunks, $vectors, $embedder) {
             $document->chunks()->delete();
@@ -79,7 +83,8 @@ class ProcessDocument implements ShouldQueue
                     'document_id' => $document->id,
                     'user_id' => $document->user_id,
                     'position' => $i,
-                    'content' => $chunks[$i],
+                    'section' => $chunks[$i]['section'],
+                    'content' => $chunks[$i]['content'],
                     'embedding' => VectorCodec::encode($vectors[$i]),
                 ], $positions));
             }

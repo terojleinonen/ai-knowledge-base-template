@@ -52,7 +52,7 @@ class DatabaseVectorStore implements VectorStore
         $chunks = Chunk::query()
             ->with('document:id,title')
             ->whereIn('id', array_keys($scores))
-            ->get(['id', 'document_id', 'content'])
+            ->get(['id', 'document_id', 'section', 'content'])
             ->keyBy('id');
 
         $results = [];
@@ -66,6 +66,7 @@ class DatabaseVectorStore implements VectorStore
                 documentTitle: $chunk->document->title,
                 content: $chunk->content,
                 score: round($score, 4),
+                section: $chunk->section,
             );
         }
 

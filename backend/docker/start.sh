@@ -11,6 +11,8 @@ php artisan migrate --force
 if [ "${KB_DEMO_ENABLED:-false}" = "true" ]; then
     # Idempotent: only embeds the demo documents when they're missing or the model changed.
     php artisan kb:demo:prepare || echo "WARNING: demo preparation failed; guest sessions will retry it."
+    # Re-index guests' documents after the embedding model or index format changed (usually none).
+    php artisan kb:reindex || echo "WARNING: queueing re-indexing failed."
 fi
 
 # Free hosting tiers have no separate worker service, so the web container can run

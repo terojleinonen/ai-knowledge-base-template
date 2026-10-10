@@ -144,3 +144,26 @@ describe('with a reranker', function () {
         Reranking::assertNothingReranked();
     });
 });
+
+it('stores the section a passage continues and uses it for search, reranking and the prompt', function () {
+    config(['knowledge.chunking.size' => 300, 'knowledge.chunking.overlap' => 50]);
+    $text = "## Daily allowances by country\n\n".implode("\n\n", array_map(fn ($c) => "{$c}: daily allowance 50 euros; hotel limit 150 euros per night.", ['Finland', 'Germany', 'Sweden', 'Norway', 'Denmark', 'Estonia']))
+        ."\n\nFor countries not listed, Finance uses the tax authority's rates.";
+    $document = ingest($this->user, 'travel', $text);
+
+    $continuation = $document->chunks()->where('content', 'like', '%countries not listed%')->sole();
+    expect($continuation->section)->toBe('Daily allowances by country')
+        ->and($continuation->content)->not->toContain('Daily allowances by country');
+
+    // Keyword search sees the heading as part of the passage.
+    $hits = app(KeywordSearch::class)->search($this->user->id, 'allowances countries listed', model(), 10);
+    expect($hits[0]['chunk_id'])->toBe($continuation->id);
+
+    // The reranker gets title and section in front of the passage.
+    config(['knowledge.rerank.provider' => 'jina']);
+    Reranking::fake();
+    retrieve($this->user, 'daily allowance for countries not listed');
+    Reranking::assertReranked(fn (RerankingPrompt $prompt) => in_array(
+        "travel > Daily allowances by country\n\n".$continuation->content, $prompt->documents, true,
+    ));
+});

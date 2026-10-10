@@ -2,18 +2,21 @@
 
 use App\Jobs\ProcessDocument;
 use App\Models\Document;
+use App\Services\Retrieval\Embedder;
 use Illuminate\Support\Facades\Queue;
 
-it('queues documents embedded with a different model', function () {
+it('queues documents embedded with a different model or index format', function () {
     Queue::fake();
 
     $stale = Document::factory()->ready()->create(['embedding_model' => 'ollama:nomic-embed-text']);
-    Document::factory()->ready()->create(['embedding_model' => 'openai:text-embedding-3-small']);
+    $oldFormat = Document::factory()->ready()->create(['embedding_model' => 'openai:text-embedding-3-small']); // before index format 2
+    Document::factory()->ready()->create(['embedding_model' => app(Embedder::class)->identifier()]);
 
-    $this->artisan('kb:reindex')->expectsOutputToContain('Queued 1 document(s)')->assertSuccessful();
+    $this->artisan('kb:reindex')->expectsOutputToContain('Queued 2 document(s)')->assertSuccessful();
 
-    Queue::assertPushed(ProcessDocument::class, 1);
+    Queue::assertPushed(ProcessDocument::class, 2);
     Queue::assertPushed(ProcessDocument::class, fn ($job) => $job->document->is($stale));
+    Queue::assertPushed(ProcessDocument::class, fn ($job) => $job->document->is($oldFormat));
 });
 
 it('can reindex everything', function () {

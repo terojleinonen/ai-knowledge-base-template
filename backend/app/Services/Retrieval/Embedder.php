@@ -6,6 +6,9 @@ use Laravel\Ai\Embeddings;
 
 class Embedder
 {
+    /** 2: section-aware chunks, embedded with their document title and section heading. */
+    public const INDEX_FORMAT = 2;
+
     public function __construct(
         private readonly string $provider,
         private readonly ?string $model,
@@ -68,6 +71,10 @@ class Embedder
     public function identifier(): string
     {
         $identifier = implode(':', array_filter([$this->provider, $this->model, $this->dimensions]));
+
+        // How passages are chunked and what text is embedded (see PassageText). Bumping it
+        // re-indexes documents: kb:reindex and the demo pick up the changed identifier.
+        $identifier .= '#'.self::INDEX_FORMAT;
 
         // Prefixes change the vectors, so they are part of the model's identity.
         if ($this->queryPrefix !== '' || $this->documentPrefix !== '') {

@@ -107,3 +107,13 @@ it('lists and deletes conversations', function () {
     $this->deleteJson("/api/conversations/{$conversation->id}")->assertNoContent();
     $this->assertModelMissing($conversation);
 });
+
+it('tells the model which section a passage continues', function () {
+    config(['knowledge.chunking.size' => 200, 'knowledge.chunking.overlap' => 0]);
+    KnowledgeBaseAssistant::fake(['Ask Finance [1].']);
+    ingest($this->user, 'travel', "## Daily allowances\n\n".str_repeat('Finland pays fifty euros. ', 6)."\n\nUnlisted countries use the tax authority rates.");
+
+    $this->postJson('/api/chat', ['question' => 'Which rates apply to unlisted countries?'])->assertCreated();
+
+    KnowledgeBaseAssistant::assertPrompted(fn (AgentPrompt $prompt) => $prompt->contains('(from "travel", section "Daily allowances")'));
+});

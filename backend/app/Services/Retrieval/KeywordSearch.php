@@ -37,13 +37,14 @@ class KeywordSearch
         $matches = []; // chunk id => [length, [term => frequency]]
 
         Chunk::query()
-            ->select(['chunks.id', 'chunks.content'])
+            ->select(['chunks.id', 'chunks.section', 'chunks.content'])
             ->where('chunks.user_id', $userId)
             ->whereHas('document', fn (Builder $q) => $q->where('status', DocumentStatus::Ready)->where('embedding_model', $embeddingModel))
             ->when($documentIds !== null, fn (Builder $q) => $q->whereIn('chunks.document_id', $documentIds))
             ->lazyById(500, 'chunks.id', 'id')
             ->each(function (Chunk $chunk) use ($wanted, &$chunkCount, &$totalLength, &$documentFrequency, &$matches) {
-                $tokens = Tokenizer::tokens($chunk->content);
+                // The section heading counts as part of the passage it continues.
+                $tokens = Tokenizer::tokens(trim($chunk->section."\n".$chunk->content));
                 $chunkCount++;
                 $totalLength += count($tokens);
 
