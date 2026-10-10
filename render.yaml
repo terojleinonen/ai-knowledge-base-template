@@ -57,6 +57,9 @@ services:
         value: "4"
       - key: KB_RETRIEVAL_MIN_SCORE
         value: "0.2"           # calibrate with: php artisan kb:eval --retrieval-only
+      - key: KB_RETRIEVAL_MODE
+        value: hybrid            # vector + BM25 keyword search
+      # Optional reranker: set KB_RERANK_PROVIDER=jina, KB_RERANK_MODEL and JINA_API_KEY in the dashboard.
       - key: ANTHROPIC_API_KEY   # chat
         sync: false
       - key: OPENAI_API_KEY      # embeddings (Anthropic has no embeddings API)

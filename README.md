@@ -31,7 +31,8 @@ Upload ─▶ store file ─▶ ProcessDocument job (queue)
                           ├─ embed chunks in batches
                           └─ save chunks + vectors ─▶ status: ready
 
-Question ─▶ embed question ─▶ cosine search over the user's chunks (top-k)
+Question ─▶ vector search (cosine) + keyword search (BM25) over the user's chunks
+         ─▶ merge by reciprocal rank fusion ─▶ optional reranker ─▶ top-k
          ─▶ prompt LLM with numbered sources + recent chat history
          ─▶ answer streamed token-by-token (SSE) with [n] citations
          ─▶ citations verified against the sources, then persisted
@@ -40,6 +41,7 @@ Question ─▶ embed question ─▶ cosine search over the user's chunks (top-
 - Every query is scoped to the authenticated user's documents. There's no cross-tenant retrieval, and tests cover this.
 - If nothing relevant is found, the API answers without calling the LLM, which saves cost and avoids hallucinations.
 - Citations are checked after generation (`CitationRepairer`). Each sentence is matched against the source passages by distinctive shared words and numbers. Wrong or non-existent source numbers are corrected, missing ones are added, and "not in the sources" sentences are left uncited. This matters most for small local models, which often get the facts right but the numbers wrong. Streamed text shows the model's raw citations until the answer completes.
+- Retrieval is hybrid (`Retriever`). Vector search finds passages that mean the same thing in other words, and BM25 keyword search finds exact terms that embeddings blur: product codes, names, numbers ("IP54", "LTE-M", "1Password"). The two rankings are merged with reciprocal rank fusion. Without a reranker, a passage is kept if its vector score passes `KB_RETRIEVAL_MIN_SCORE` or it contains most of the question's distinctive terms. With a reranker (Jina, Cohere or Voyage AI), the reranker orders the merged candidates. If it fails or its free quota runs out, the answer still comes, ranked without it.
 - Vectors are stored as compact float32 in the regular database (`DatabaseVectorStore`), so any database works with zero extra infrastructure. The `VectorStore` interface lets you swap in pgvector or Qdrant when you outgrow brute-force search (roughly tens of thousands of chunks per user).
 - Each document records which embedding model indexed it, so switching models never compares incompatible vectors. Run `php artisan kb:reindex` after switching.
 
@@ -141,6 +143,9 @@ All settings are in `backend/config/knowledge.php` and can be overridden via env
 | `KB_EMBEDDINGS_PROVIDER` / `KB_EMBEDDINGS_MODEL` | `openai` / `text-embedding-3-small` | Vector embeddings |
 | `KB_CHUNK_SIZE` / `KB_CHUNK_OVERLAP` | `1200` / `200` | Chunking (characters) |
 | `KB_RETRIEVAL_TOP_K` / `KB_RETRIEVAL_MIN_SCORE` | `6` / `0.2` | Retrieval |
+| `KB_RETRIEVAL_MODE` | `hybrid` | `hybrid` (vector + keyword) or `vector` |
+| `KB_RERANK_PROVIDER` / `KB_RERANK_MODEL` | off | Optional reranker, e.g. `jina` / `jina-reranker-v2-base-multilingual` (needs `JINA_API_KEY`) |
+| `KB_RERANK_MIN_SCORE` | none | Drop passages the reranker scores below this; unset = reorder only |
 | `KB_UPLOAD_MAX_KB` | `20480` | Max upload size |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Frontend origin(s) |
 | `SANCTUM_TOKEN_EXPIRATION` | `43200` (30 days) | API token lifetime, in minutes |
@@ -309,10 +314,11 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - Public demo: guest accounts with sample documents, cost caps, per-visitor abuse limits, daily end-to-end check
 - Durable uploads on Cloudflare R2 (any S3-compatible storage works)
 - Bot protection with Cloudflare Turnstile
+- Hybrid search (vector + BM25 keyword) with an optional reranker
 
 ### Next
-1. **Hybrid search and reranking.** Combine keyword search with vector search so exact terms and numbers are found reliably, then rerank the results. Relevance scores alone don't separate good matches from bad ones (see the calibration under [Public demo mode](#public-demo-mode)).
-2. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level.
+1. **A bigger evaluation set.** More documents, harder questions, and citation checks at passage level rather than document level. The sample set is too small to show what hybrid search and reranking gain: vector search alone already ranks every case correctly.
+2. **Calibrated reranker cutoff.** Use reranker scores to turn away uncovered questions before any model call, which vector scores can't do reliably.
 3. **Cited passages in context.** Clicking a citation opens the document with the passage highlighted.
 
 ### Later
@@ -325,3 +331,4 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - On free hosting, the first request after 15 idle minutes takes up to a minute while the server wakes up.
 - Citation checking matches words, not meaning: a reworded fact is left uncited rather than guessed.
 - Turning away unrelated questions relies mainly on the model, because relevance scores overlap.
+- PDFs with hard-wrapped text lines can split words ("Eac h"), which keyword search then misses; vector search still finds the passage.

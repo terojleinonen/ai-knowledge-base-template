@@ -1,9 +1,7 @@
 <?php
 
 use App\Ai\Agents\KnowledgeBaseAssistant;
-use App\Jobs\ProcessDocument;
 use App\Models\Conversation;
-use App\Models\Document;
 use App\Models\User;
 use App\Services\Chat\AnswerQuestion;
 use Illuminate\Support\Facades\Storage;
@@ -17,15 +15,6 @@ beforeEach(function () {
     $this->user = User::factory()->create();
     Sanctum::actingAs($this->user);
 });
-
-function ingest(User $user, string $title, string $content): Document
-{
-    $document = Document::factory()->for($user)->create(['title' => $title, 'path' => "documents/{$title}.txt"]);
-    Storage::disk('local')->put($document->path, $content);
-    ProcessDocument::dispatchSync($document);
-
-    return $document->refresh();
-}
 
 it('answers a question using retrieved sources', function () {
     KnowledgeBaseAssistant::fake(['Employees get 25 vacation days per year [1].']);

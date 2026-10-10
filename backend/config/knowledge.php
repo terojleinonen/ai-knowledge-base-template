@@ -61,8 +61,36 @@ return [
     */
 
     'retrieval' => [
+        // "hybrid" (vector + BM25 keyword search, merged by rank fusion) or "vector".
+        'mode' => env('KB_RETRIEVAL_MODE', 'hybrid'),
         'top_k' => (int) env('KB_RETRIEVAL_TOP_K', 6),
+        // Vector score cutoff (without a reranker); calibrate per embedding model.
         'min_score' => (float) env('KB_RETRIEVAL_MIN_SCORE', 0.2),
+        // Candidates taken from each search before merging.
+        'candidates' => (int) env('KB_RETRIEVAL_CANDIDATES', 20),
+        // Without a reranker, a keyword match is also kept if it covers this share of the
+        // question's distinctive (IDF-weighted) terms.
+        'keyword_min_coverage' => (float) env('KB_RETRIEVAL_KEYWORD_COVERAGE', 0.5),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reranking (optional)
+    |--------------------------------------------------------------------------
+    |
+    | A reranker (jina, cohere, voyageai...; see config/ai.php) orders the merged
+    | candidates by relevance to the question. With min_score set, its score also decides
+    | which passages reach the chat model. Off when no provider is set; if the reranker
+    | fails, hybrid ranking without it is used.
+    |
+    */
+
+    'rerank' => [
+        'provider' => env('KB_RERANK_PROVIDER') ?: null,
+        'model' => env('KB_RERANK_MODEL') ?: null,
+        'min_score' => filled(env('KB_RERANK_MIN_SCORE')) ? (float) env('KB_RERANK_MIN_SCORE') : null,
+        'candidates' => (int) env('KB_RERANK_CANDIDATES', 12),
+        'timeout' => (int) env('KB_RERANK_TIMEOUT', 15),
     ],
 
     'citations' => [
