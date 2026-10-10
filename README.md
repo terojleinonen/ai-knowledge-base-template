@@ -290,7 +290,7 @@ Without R2, uploaded files are lost when the free container restarts. Their extr
 
 ### Checking the live demo
 
-`bin/check-demo` runs an end-to-end check against a deployment. It wakes the API and checks settings, that the frontend loads and points at the API, CORS, guest sessions with the sample documents, and the search pipeline:
+`bin/check-demo` runs an end-to-end check against a deployment. It wakes the API and checks settings, that the frontend loads and points at the API, CORS, guest sessions with the sample documents, the search pipeline, and that the reranker turns away an uncovered question:
 
 ```bash
 bin/check-demo --api https://<service>.onrender.com --web https://<project>.pages.dev        # no LLM cost

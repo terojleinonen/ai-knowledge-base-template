@@ -164,7 +164,17 @@ def main():
     answer = json.loads(body).get("data", {}) if status == 201 else {}
     check("search pipeline works", status == 201 and answer.get("sources") == [], f"HTTP {status}: {body[:160]}" if status != 201 else "")
 
-    # 7. Optional: one real question through the chat model.
+    # 7. Reranker: a plausible but uncovered question scores high on vectors alone (so it
+    #    would reach the chat model) but is filtered by the reranker cutoff. Fails when the
+    #    reranker is down or its free tokens have run out.
+    status, _, body = request("POST", f"{api}/api/chat", {"question": "What is the dress code?"}, auth, timeout=90)
+    answer = json.loads(body).get("data", {}) if status == 201 else {}
+    filtered = status == 201 and answer.get("sources") == []
+    check("reranker filters uncovered questions", filtered,
+          "" if filtered else f"HTTP {status}: {body[:160]}" if status != 201
+          else "sources were sent to the chat model; check JINA_API_KEY and the Jina token balance")
+
+    # 8. Optional: one real question through the chat model.
     if args.ask:
         status, _, body = request("POST", f"{api}/api/chat",
                                   {"question": "How many vacation days do employees get per year?"}, auth, timeout=120)
