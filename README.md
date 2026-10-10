@@ -341,4 +341,3 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - On free hosting, the first request after 15 idle minutes takes up to a minute while the server wakes up.
 - Citation checking matches words, not meaning: a reworded fact is left uncited rather than guessed.
 - Questions about the right topic but a missing detail still reach the model, which declines them; only clearly uncovered questions are filtered by retrieval.
-- PDFs with hard-wrapped text lines can split words ("Eac h"), which keyword search then misses; vector search still finds the passage.
