@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       ask:
-        description: Also ask one real question (one chat model call, about $0.007)
+        description: Also ask a real question and a follow-up (two chat model calls, about $0.015)
         type: boolean
         default: true
 
