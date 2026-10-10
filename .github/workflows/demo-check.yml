@@ -24,7 +24,7 @@ jobs:
       # Lets the check start demo sessions past Turnstile (same value as KB_MONITOR_TOKEN on the API).
       DEMO_MONITOR_TOKEN: ${{ secrets.DEMO_MONITOR_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check the live demo
         run: |
