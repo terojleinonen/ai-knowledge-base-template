@@ -70,7 +70,7 @@ services:
       - key: KB_RERANK_MODEL
         value: jina-reranker-v2-base-multilingual
       - key: KB_RERANK_MIN_SCORE
-        value: "0.12"            # calibrated with kb:eval --retrieval-only; see README
+        value: "0.11"            # calibrated with kb:eval --retrieval-only; see README
       - key: JINA_API_KEY        # reranking
         sync: false
       - key: ANTHROPIC_API_KEY   # chat

@@ -114,6 +114,7 @@ class EvalRunner
 
         $result->retrievedDocuments = array_map(fn (SearchResult $hit) => $hit->documentTitle, $hits);
         $result->topScore = $hits[0]->score ?? 0.0;
+        $result->retrievedScores = array_map(fn (SearchResult $hit) => $hit->score, $hits);
 
         foreach ($result->retrievedDocuments as $i => $title) {
             if (in_array($title, $case->expectDocuments, true)) {
