@@ -40,6 +40,8 @@ export interface Source {
   chunk_id: number
   excerpt: string
   score: number
+  /** Sentences of the passage that support the answer (absent on answers saved before highlights existed). */
+  highlights?: string[]
 }
 
 export interface Passage {

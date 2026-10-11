@@ -115,10 +115,10 @@ const passage = {
   after: ['Sick leave needs a certificate.'],
 }
 
-function renderConversation(passageResponse: { body?: unknown; status?: number }) {
+function renderConversation(passageResponse: { body?: unknown; status?: number }, reply = answer) {
   mockApi((url) => {
     if (url.endsWith('/documents?per_page=100')) return { body: { data: [{ id: 3, status: 'ready' }] } }
-    if (url.endsWith('/conversations/7')) return { body: { data: { id: 7, title: 'Vacation', messages: [userMessage, answer] } } }
+    if (url.endsWith('/conversations/7')) return { body: { data: { id: 7, title: 'Vacation', messages: [userMessage, reply] } } }
     if (url.endsWith('/passages/9')) return passageResponse
     return undefined
   })
@@ -167,4 +167,35 @@ it('falls back to the saved excerpt when the passage is gone', async () => {
 
   expect(await screen.findByText(/no longer available/)).toBeInTheDocument()
   expect(screen.getByRole('dialog')).toHaveTextContent('Vacation policy…')
+})
+
+it('highlights the sentences the answer relies on', async () => {
+  const highlighted = { ...source, highlights: ['employees get 25 vacation days.'] }
+  renderConversation(
+    { body: { data: { ...passage, content: 'Vacation policy: employees get 25 vacation days. Requests go through Personio.' } } },
+    { ...answer, sources: [highlighted] },
+  )
+
+  // The source list shows the supporting sentence rather than the start of the passage.
+  await userEvent.click(await screen.findByText('1 sources'))
+  expect(screen.getByText('employees get 25 vacation days.')).toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Source 1' }))
+
+  const passageBlock = await screen.findByLabelText('Cited passage')
+  const marks = passageBlock.querySelectorAll('mark')
+  expect(marks).toHaveLength(1)
+  expect(marks[0]).toHaveTextContent('employees get 25 vacation days.')
+  expect(passageBlock).toHaveTextContent('Vacation policy: employees get 25 vacation days. Requests go through Personio.')
+  expect(screen.getByRole('dialog')).toHaveTextContent('highlighted: what the answer relies on')
+})
+
+it('highlights the whole passage for answers saved without sentence highlights', async () => {
+  renderConversation({ body: { data: passage } })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Source 1' }))
+
+  const passageBlock = await screen.findByLabelText('Cited passage')
+  expect(passageBlock.tagName).toBe('MARK')
+  expect(passageBlock.querySelectorAll('mark')).toHaveLength(0)
 })

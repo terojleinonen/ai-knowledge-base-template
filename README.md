@@ -37,7 +37,7 @@ Question ─▶ follow-up? rewrite it as a standalone question from the conversa
          ─▶ prompt LLM with numbered sources + recent chat history
          ─▶ answer streamed token-by-token (SSE) with [n] citations
          ─▶ citations verified against the sources, then persisted
-         ─▶ clicking [n] opens the cited passage within its surrounding text
+         ─▶ clicking [n] opens the cited passage, with the supporting sentences highlighted
 ```
 
 - Every query is scoped to the authenticated user's documents. There's no cross-tenant retrieval, and tests cover this.
@@ -45,6 +45,7 @@ Question ─▶ follow-up? rewrite it as a standalone question from the conversa
 - Citations are checked after generation (`CitationRepairer`). Each sentence is matched against the source passages by distinctive shared words and numbers. Wrong or non-existent source numbers are corrected, missing ones are added, and "not in the sources" sentences are left uncited. This matters most for small local models, which often get the facts right but the numbers wrong. Streamed text shows the model's raw citations until the answer completes.
 - Retrieval is hybrid (`Retriever`). Vector search finds passages that mean the same thing in other words, and BM25 keyword search finds exact terms that embeddings blur: product codes, names, numbers ("IP54", "LTE-M", "1Password"). The two rankings are merged with reciprocal rank fusion. Without a reranker, a passage is kept if its vector score passes `KB_RETRIEVAL_MIN_SCORE` or it contains most of the question's distinctive terms. With a reranker (Jina, Cohere or Voyage AI), the reranker orders the merged candidates. If it fails or its free quota runs out, the answer still comes, ranked without it.
 - Follow-up questions are made searchable. "How long must they be?" means nothing to search on its own, so a small model call rewrites it from the conversation ("How long must the passwords be?"). The chat model still answers the question as typed, with the conversation as context. On the sample set's follow-up cases, rewriting found the right document first every time, against 92% when searching with the message alone. It adds about a second and a few hundred tokens per follow-up. `KB_FOLLOW_UP_MODE=combine` prepends the previous question instead (free, slightly worse). If a rewrite fails, the combined question is used.
+- When an answer is saved, each cited passage's supporting sentences are found (`SupportingSentences`): each answer sentence with [n] is matched against passage n's sentences and lines by shared distinctive words, with numbers weighted double. The citation panel highlights those sentences. On the wiki eval, a highlighted sentence contained the evidence in every answer that cited the evidence passage.
 - Passages follow the document's structure. A heading (Markdown `#`, or a short title line from a PDF or DOCX) starts a new passage, small sections stay together, and no overlap carries one section into the next. A passage that continues a section stores that section's heading. The heading and document title are embedded, reranked and shown to the model with the passage ("travel-policy > 6. Daily allowances"), so "For countries not listed…" still says what it is about. The stored text and the citation panel stay as written.
 - Vectors are stored as compact float32 in the regular database (`DatabaseVectorStore`), so any database works with zero extra infrastructure. The `VectorStore` interface lets you swap in pgvector or Qdrant when you outgrow brute-force search (roughly tens of thousands of chunks per user).
 - Each document records which embedding model indexed it, so switching models never compares incompatible vectors. Run `php artisan kb:reindex` after switching.
@@ -338,13 +339,10 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - Durable uploads on Cloudflare R2 (any S3-compatible storage works)
 - Bot protection with Cloudflare Turnstile
 - Follow-up questions rewritten into standalone search queries
-- Citations open the cited passage, highlighted within the text around it
+- Citations open the cited passage within the text around it, with the sentences the answer relies on highlighted
 - A harder evaluation set (11 documents, 78 cases) with passage-level evidence checks and results by question type
 - Section-aware passages, embedded with their document title and section heading
 - Hybrid search (vector + BM25 keyword) with a reranker whose cutoff answers unrelated and uncovered questions without a model call
-
-### Next
-1. **Sentence-level highlights.** Mark the sentences that support each claim, not the whole cited passage.
 
 ### Later
 - OCR for scanned PDFs

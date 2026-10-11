@@ -16,6 +16,12 @@ final class CaseResult
     /** Citations pointing to a passage that contains evidence. */
     public int $evidenceCitations = 0;
 
+    /** Whether a highlighted sentence contains evidence (null: no citation to an evidence passage). */
+    public ?bool $highlightHit = null;
+
+    /** @var list<string> sentences highlighted in the answer's sources */
+    public array $highlights = [];
+
     /** @var list<string> evidence that appears in none of the dataset's passages (a mistake in the case) */
     public array $unknownEvidence = [];
 
@@ -126,6 +132,8 @@ final class CaseResult
             'citations' => $this->citations,
             'correct_citations' => $this->correctCitations,
             'evidence_citations' => $this->evidenceCitations,
+            'highlight_hit' => $this->highlightHit,
+            'highlights' => $this->highlights,
         ];
     }
 }

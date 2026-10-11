@@ -171,7 +171,7 @@ function SourceList({ sources, onCite }: { sources: Source[]; onCite: (source: S
               {s.document_title}
               <span className="ml-2 text-xs font-normal text-slate-400">relevance {Math.round(s.score * 100)}%</span>
             </p>
-            <p className="mt-1 text-slate-600">{plainText(s.excerpt)}</p>
+            <p className="mt-1 text-slate-600">{s.highlights?.length ? s.highlights.join(' … ') : plainText(s.excerpt)}</p>
             <button
               type="button"
               onClick={() => onCite(s)}
