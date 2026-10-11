@@ -5,6 +5,11 @@
     "security-policy.docx",
     "aurora-product-spec.pdf"
   ],
+  "examples": [
+    "How many vacation days can be carried over?",
+    "If I lose my laptop, who do I tell and how quickly?",
+    "How long does the Aurora node battery last?"
+  ],
   "cases": [
     {
       "question": "How many vacation days do employees get per year, and how many can be carried over?",

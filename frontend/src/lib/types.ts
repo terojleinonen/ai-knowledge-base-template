@@ -12,6 +12,8 @@ export interface AppConfig {
   demo: boolean
   registration: boolean
   turnstile_site_key: string | null
+  /** Example questions about the demo documents (empty outside demo mode). */
+  demo_questions?: string[]
   limits: {
     questions_per_user_per_day: number | null
     questions_per_day: number | null

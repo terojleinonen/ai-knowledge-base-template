@@ -10,6 +10,7 @@ use App\Services\Documents\DocumentIngestor;
 use App\Services\Retrieval\Embedder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
  * Guest accounts for a public demo.
@@ -118,6 +119,20 @@ class DemoAccounts
             ['email' => self::TEMPLATE_EMAIL],
             ['name' => 'Demo template', 'password' => Str::random(40)],
         );
+    }
+
+    /**
+     * Example questions about the demo documents, suggested in an empty chat.
+     *
+     * @return list<string>
+     */
+    public function exampleQuestions(): array
+    {
+        try {
+            return Dataset::load($this->datasetPath())->examples;
+        } catch (InvalidArgumentException) {
+            return [];
+        }
     }
 
     private function datasetPath(): string

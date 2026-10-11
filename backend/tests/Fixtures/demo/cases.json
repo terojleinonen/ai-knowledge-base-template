@@ -1,5 +1,18 @@
 {
   "name": "Demo fixture",
-  "documents": ["vacation.txt", "security.txt"],
-  "cases": [{"question": "unused", "unanswerable": true}]
+  "documents": [
+    "vacation.txt",
+    "security.txt"
+  ],
+  "examples": [
+    "How many vacation days can be carried over?",
+    "Which password manager is approved?",
+    "How many vacation days do employees get?"
+  ],
+  "cases": [
+    {
+      "question": "unused",
+      "unanswerable": true
+    }
+  ]
 }

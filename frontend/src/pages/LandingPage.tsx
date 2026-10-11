@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import productChat from '../assets/product-chat.jpg'
 import { useAuth } from '../auth/useAuth'
 import { DemoButton } from '../components/DemoButton'
-import { Logo } from '../components/ui'
+import { Button, Logo, Spinner } from '../components/ui'
 import { useAppConfig } from '../hooks/config'
 
 const features = [
@@ -14,8 +14,10 @@ const features = [
 export function LandingPage() {
   const { user } = useAuth()
   const config = useAppConfig()
-  const registration = config.data?.registration ?? true
-  const demo = config.data?.demo ?? false
+  // Until the server answers (a free-tier server can take a minute to wake), don't guess:
+  // offering sign-up on a demo with registration closed leads to a form that fails.
+  const registration = config.data?.registration === true
+  const demo = config.data?.demo === true
 
   return (
     <div className="min-h-full bg-white">
@@ -55,6 +57,20 @@ export function LandingPage() {
               <Link to="/app" className="rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
                 Open your knowledge base
               </Link>
+            ) : config.isPending ? (
+              <>
+                <Button disabled className="px-5 py-3">
+                  <Spinner /> Waking up the server…
+                </Button>
+                <p className="text-sm text-slate-500">This runs on free hosting, so the first visit can take up to a minute.</p>
+              </>
+            ) : config.isError ? (
+              <>
+                <Button variant="secondary" className="px-5 py-3" onClick={() => void config.refetch()}>
+                  Try again
+                </Button>
+                <p className="text-sm text-slate-500">The server didn't respond. It may still be starting up.</p>
+              </>
             ) : demo ? (
               <>
                 <DemoButton className="max-w-md" />

@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router'
+import { tokenStore } from '../lib/api'
 import { mockApi, renderApp, sse } from '../test/utils'
 import { ChatPage } from './ChatPage'
 
@@ -152,7 +153,7 @@ it('opens a cited passage in context and closes it with Escape', async () => {
 it('opens a passage from the source list too', async () => {
   renderConversation({ body: { data: passage } })
 
-  await userEvent.click(await screen.findByText('1 sources'))
+  await userEvent.click(await screen.findByText('1 source'))
   await userEvent.click(screen.getByRole('button', { name: 'Read in context' }))
 
   expect(await screen.findByLabelText('Cited passage')).toBeInTheDocument()
@@ -177,7 +178,7 @@ it('highlights the sentences the answer relies on', async () => {
   )
 
   // The source list shows the supporting sentence rather than the start of the passage.
-  await userEvent.click(await screen.findByText('1 sources'))
+  await userEvent.click(await screen.findByText('1 source'))
   expect(screen.getByText('employees get 25 vacation days.')).toBeInTheDocument()
 
   await userEvent.click(screen.getByRole('button', { name: 'Source 1' }))
@@ -198,4 +199,42 @@ it('highlights the whole passage for answers saved without sentence highlights',
   const passageBlock = await screen.findByLabelText('Cited passage')
   expect(passageBlock.tagName).toBe('MARK')
   expect(passageBlock.querySelectorAll('mark')).toHaveLength(0)
+})
+
+it('suggests example questions to demo guests and asks one when clicked', async () => {
+  tokenStore.set('guest-token')
+  let asked = ''
+  mockApi((url, init) => {
+    if (url.endsWith('/auth/me')) return { body: { data: { id: 9, name: 'Guest', email: 'g@kb-demo.invalid', is_guest: true } } }
+    if (url.endsWith('/config')) return { body: { demo: true, registration: false, limits: {}, turnstile_site_key: null, demo_questions: ['How many vacation days can be carried over?'] } }
+    if (url.endsWith('/documents?per_page=100')) return { body: { data: [{ id: 3, status: 'ready' }] } }
+    if (url.endsWith('/chat/stream') && init.method === 'POST') {
+      asked = JSON.parse(String(init.body)).question
+      return { stream: [sse([['sources', { sources: [source] }]]), sse([['done', answer]])] }
+    }
+    return undefined
+  })
+
+  renderChat()
+  await userEvent.click(await screen.findByRole('button', { name: 'How many vacation days can be carried over?' }))
+
+  await waitFor(() => expect(asked).toBe('How many vacation days can be carried over?'))
+  tokenStore.set(null)
+})
+
+it('shows Markdown headings in a passage without their # marks', async () => {
+  renderConversation({ body: { data: { ...passage, before: ['## 5. Equipment\nLaptops are replaced every three years.'] } } })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Source 1' }))
+
+  const heading = await screen.findByText('5. Equipment')
+  expect(heading).toHaveClass('font-semibold')
+  expect(screen.getByRole('dialog')).not.toHaveTextContent('##')
+})
+
+it('labels the source count and shows no raw scores', async () => {
+  renderConversation({ body: { data: passage } })
+
+  expect(await screen.findByText('1 source')).toBeInTheDocument()
+  expect(screen.queryByText(/relevance/)).not.toBeInTheDocument()
 })

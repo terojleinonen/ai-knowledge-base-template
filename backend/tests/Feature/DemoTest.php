@@ -114,5 +114,12 @@ it('exposes public config for the frontend', function () {
         'demo' => true,
         'registration' => false,
         'limits' => ['questions_per_user_per_day' => 20],
-    ]);
+    ])->assertJsonCount(3, 'demo_questions')
+        ->assertJsonPath('demo_questions.0', 'How many vacation days can be carried over?');
+});
+
+it('suggests no example questions outside demo mode', function () {
+    config(['knowledge.demo.enabled' => false]);
+
+    $this->getJson('/api/config')->assertJsonPath('demo_questions', []);
 });

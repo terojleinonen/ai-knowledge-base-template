@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\PassageController;
+use App\Services\Demo\DemoAccounts;
 use App\Support\ClientIp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,7 @@ Route::get('config', fn () => [
     'registration' => (bool) config('knowledge.registration.enabled'),
     'limits' => config('knowledge.limits'),
     'turnstile_site_key' => config('knowledge.turnstile.secret_key') ? config('knowledge.turnstile.site_key') : null,
+    'demo_questions' => config('knowledge.demo.enabled') ? app(DemoAccounts::class)->exampleQuestions() : [],
 ]);
 
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {

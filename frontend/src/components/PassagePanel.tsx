@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, type ReactNode } from 'react'
 import { usePassage } from '../hooks/passages'
 import { ApiError } from '../lib/api'
 import type { Source } from '../lib/types'
@@ -98,7 +98,7 @@ export function PassagePanel({ source, onClose }: { source: Source; onClose: () 
               {passage.data.position > passage.data.before.length && <p className="mb-3 text-center text-slate-400">…</p>}
               {passage.data.before.map((text, i) => (
                 <p key={`b${i}`} className="mb-3">
-                  {text}
+                  {renderPassage(text)}
                 </p>
               ))}
               {highlights.length > 0 ? (
@@ -107,7 +107,7 @@ export function PassagePanel({ source, onClose }: { source: Source; onClose: () 
                   className="mb-3 rounded-lg bg-amber-50/60 px-3 py-2 text-slate-700 ring-1 ring-amber-200"
                   aria-label="Cited passage"
                 >
-                  {withHighlights(passage.data.content, highlights)}
+                  {renderPassage(passage.data.content, highlights)}
                 </div>
               ) : (
                 <mark
@@ -115,12 +115,12 @@ export function PassagePanel({ source, onClose }: { source: Source; onClose: () 
                   className="mb-3 block rounded-lg bg-amber-50 px-3 py-2 text-slate-900 ring-1 ring-amber-200"
                   aria-label="Cited passage"
                 >
-                  {passage.data.content}
+                  {renderPassage(passage.data.content)}
                 </mark>
               )}
               {passage.data.after.map((text, i) => (
                 <p key={`a${i}`} className="mb-3">
-                  {text}
+                  {renderPassage(text)}
                 </p>
               ))}
               {passage.data.position + passage.data.after.length < passage.data.total - 1 && (
@@ -134,27 +134,54 @@ export function PassagePanel({ source, onClose }: { source: Source; onClose: () 
   )
 }
 
-/** The passage with each supporting sentence marked; text the server didn't match stays plain. */
-function withHighlights(content: string, highlights: string[]): ReactNode[] {
-  const ranges = highlights
-    .map((h) => [content.indexOf(h), content.indexOf(h) + h.length] as const)
-    .filter(([start]) => start >= 0)
-    .sort((a, b) => a[0] - b[0])
+/**
+ * Passage text with Markdown headings ("## 5. Equipment") shown as bold lines without their
+ * "#" marks, and each supporting sentence marked. Text the server didn't match stays plain.
+ */
+function renderPassage(text: string, highlights: string[] = []): ReactNode[] {
+  const ranges: [number, number][] = []
+
+  for (const h of highlights) {
+    const start = text.indexOf(h)
+    if (start >= 0) ranges.push([start, start + h.length])
+  }
+  ranges.sort((a, b) => a[0] - b[0])
 
   const nodes: ReactNode[] = []
-  let cursor = 0
+  let offset = 0
 
-  for (const [start, end] of ranges) {
-    if (start < cursor) continue // overlaps the previous highlight
-    if (start > cursor) nodes.push(content.slice(cursor, start))
+  text.split('\n').forEach((line, i) => {
+    const lineEnd = offset + line.length
+    const heading = /^#{1,6}\s+/.exec(line)
+    const parts: ReactNode[] = []
+    let cursor = offset + (heading ? heading[0].length : 0)
+
+    for (const [start, end] of ranges) {
+      const from = Math.max(start, cursor)
+      const to = Math.min(end, lineEnd)
+      if (from >= to) continue
+      if (from > cursor) parts.push(text.slice(cursor, from))
+      parts.push(
+        <mark key={from} className="rounded bg-amber-200 px-0.5 text-slate-900">
+          {text.slice(from, to)}
+        </mark>,
+      )
+      cursor = to
+    }
+    if (cursor < lineEnd) parts.push(text.slice(cursor, lineEnd))
+
+    if (i > 0) nodes.push('\n')
     nodes.push(
-      <mark key={start} className="rounded bg-amber-200 px-0.5 text-slate-900">
-        {content.slice(start, end)}
-      </mark>,
+      heading ? (
+        <span key={`l${i}`} className="font-semibold text-slate-800">
+          {parts}
+        </span>
+      ) : (
+        <Fragment key={`l${i}`}>{parts}</Fragment>
+      ),
     )
-    cursor = end
-  }
+    offset = lineEnd + 1
+  })
 
-  nodes.push(content.slice(cursor))
   return nodes
 }

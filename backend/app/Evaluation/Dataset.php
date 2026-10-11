@@ -23,11 +23,13 @@ final readonly class Dataset
     /**
      * @param  list<string>  $documents  absolute file paths
      * @param  list<EvalCase>  $cases
+     * @param  list<string>  $examples  example questions to suggest to demo visitors
      */
     public function __construct(
         public string $name,
         public array $documents,
         public array $cases,
+        public array $examples = [],
     ) {}
 
     public static function load(string $path): self
@@ -60,6 +62,8 @@ final readonly class Dataset
             'cases.*.evidence.*' => ['required'],
             'cases.*.tags' => ['sometimes', 'array'],
             'cases.*.tags.*' => ['string'],
+            'examples' => ['sometimes', 'array', 'max:6'],
+            'examples.*' => ['string', 'max:200'],
         ]);
 
         if ($validator->fails()) {
@@ -101,6 +105,6 @@ final readonly class Dataset
             );
         }
 
-        return new self($data['name'] ?? basename($directory), $documents, $cases);
+        return new self($data['name'] ?? basename($directory), $documents, $cases, array_values($data['examples'] ?? []));
     }
 }
