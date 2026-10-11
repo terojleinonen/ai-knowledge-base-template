@@ -44,7 +44,9 @@ it('evaluates retrieval and answers, then cleans up', function () {
         ->and($report['cases'][1]['passed'])->toBeFalse()
         ->and($report['settings']['repair'])->toBe('on')
         ->and($report['summary']['model_calls'])->toBe(2)
-        ->and($report['cases'][2]['model_calls'])->toBe(0); // off-topic: answered without the model
+        ->and($report['cases'][2]['model_calls'])->toBe(0) // off-topic: answered without the model
+        ->and($report['cases'][0]['retrieved_scores'])->toHaveCount(count($report['cases'][0]['retrieved_documents']))
+        ->and($report['cases'][0]['retrieved_scores'][0])->toBe($report['cases'][0]['top_score']);
 
     // The throwaway user, its documents and stored files are gone.
     expect(User::count())->toBe(0)->and(Document::count())->toBe(0)

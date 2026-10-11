@@ -27,6 +27,9 @@ final class CaseResult
 
     public float $topScore = 0.0;
 
+    /** @var list<float> score of each retrieved passage, in order (reranker scores when reranking) */
+    public array $retrievedScores = [];
+
     public float $retrievalMs = 0.0;
 
     public ?string $answer = null;
@@ -109,6 +112,7 @@ final class CaseResult
             'unknown_evidence' => $this->unknownEvidence,
             'top_score' => round($this->topScore, 4),
             'retrieved_documents' => $this->retrievedDocuments,
+            'retrieved_scores' => $this->retrievedScores,
             'retrieval_ms' => round($this->retrievalMs),
             'answer' => $this->answer,
             'answer_ms' => $this->answerMs === null ? null : round($this->answerMs),

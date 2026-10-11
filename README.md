@@ -151,7 +151,7 @@ All settings are in `backend/config/knowledge.php` and can be overridden via env
 | `KB_FOLLOW_UP_MODE` | `rewrite` | Follow-up questions: `rewrite`, `combine` or `off` |
 | `KB_FOLLOW_UP_PROVIDER` / `KB_FOLLOW_UP_MODEL` | chat model | Model that rewrites follow-ups (demo: `anthropic` / `claude-haiku-5-5`) |
 | `KB_RERANK_PROVIDER` / `KB_RERANK_MODEL` | off | Optional reranker, e.g. `jina` / `jina-reranker-v2-base-multilingual` (needs `JINA_API_KEY`) |
-| `KB_RERANK_MIN_SCORE` | none | Drop passages the reranker scores below this; unset = reorder only (demo: `0.12`) |
+| `KB_RERANK_MIN_SCORE` | none | Drop passages the reranker scores below this; unset = reorder only (demo: `0.11`) |
 | `KB_UPLOAD_MAX_KB` | `20480` | Max upload size |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Frontend origin(s) |
 | `SANCTUM_TOKEN_EXPIRATION` | `43200` (30 days) | API token lifetime, in minutes |
@@ -191,7 +191,7 @@ Two datasets are included:
 - **`evals/northwind`:** 3 short documents and 46 cases. It is fast and cheap, and is the demo's sample data.
 - **`evals/northwind-wiki`:** a company wiki of 11 documents in four formats (Markdown, text, PDF, DOCX), 172 passages and 78 cases, tagged by question type. It is built to be hard: an outdated 2024 handbook contradicts the current one, the release notes and meeting notes are full of near-identical passages that hide one fact, and many questions share no wording with the documents. PDF and DOCX files are built from `src/` with `evals/tools/make_document.py`.
 
-Results (search only: `text-embedding-3-small`, hybrid search, Jina reranker at 0.12, top 4): the evidence passage is retrieved for every answerable case (100%) and ranked first for 97%, and the right document is ranked first for 100%. Search filters out 2 of the 9 unanswerable questions; the model declines the rest. Before section-aware chunking, evidence recall was 97% and the evidence passage was ranked first for 84%. Two questions failed: "Can I bring my dog to work?", whose pets paragraph shared a passage with unrelated topics, and a per diem rule cut off from its table's heading. The outdated handbook also outranked the current one for 3 questions, which no longer happens.
+Results (search only: `text-embedding-3-small`, hybrid search, Jina reranker at 0.11, top 4): the evidence passage is retrieved for every answerable case (100%) and ranked first for 97%, and the right document is ranked first for 100%. Search filters out 2 of the 9 unanswerable questions; the model declines the rest. Before section-aware chunking, evidence recall was 97% and the evidence passage was ranked first for 84%. Two questions failed: "Can I bring my dog to work?", whose pets paragraph shared a passage with unrelated topics, and a per diem rule cut off from its table's heading. The outdated handbook also outranked the current one for 3 questions, which no longer happens.
 
 With answers (Claude Opus 5.5, measured before section-aware chunking): 76 of 78 passed, with fact recall 96%, citation precision 93% by document and 77% by passage, all 9 unanswerable questions declined, and about 1,400 input tokens per answer. Only the two search misses failed; both pass with the current chunking. On all 10 outdated-handbook questions the model gave the current figures, often adding the old figure for comparison.
 
@@ -288,7 +288,7 @@ Connect the repository. Use root directory `frontend`, build command `npm run bu
 
 The relevance cutoff `KB_RETRIEVAL_MIN_SCORE=0.2` was calibrated for `text-embedding-3-small` on the sample documents plus 15 unanswerable questions. Answerable questions scored 0.29–0.61, plausible but uncovered ones ("What is the dress code?") 0.20–0.57, and unrelated ones ("Who won the World Cup?") at most 0.12. So the cutoff filters out unrelated questions before any model call, and the model handles the rest. Recalibrate with `kb:eval --retrieval-only` (and `KB_RETRIEVAL_MIN_SCORE=0`) when you change embedding models: the same questions score much higher with `nomic-embed-text`.
 
-The demo also uses Jina's reranker, whose scores separate covered from uncovered questions far better. On the 35 sample cases, the best passage for every answerable question scored 0.16–0.72, while 14 of 19 unanswerable questions scored at most 0.09. With `KB_RERANK_MIN_SCORE=0.12`, those 14 (74%) are answered without any model call and every answerable question still finds its documents. The other five are about the right product but ask for missing details ("Does the Aurora Node support Zigbee?", 0.41), so the model declines them. The gap is narrow (0.09 vs 0.16) and the set is small, so recalibrate after adding documents. A question uses about 2,000–3,500 reranker tokens. When Jina's free tokens run out, search continues without reranking and the vector cutoff applies again.
+The demo also uses Jina's reranker, whose scores separate covered from uncovered questions far better. The cutoff was calibrated on both eval sets (94 answerable and 30 unanswerable questions), recording the score of the passage that answers each question. The lowest was 0.13 ("Can I bring my dog to work?"). 17 of the unanswerable questions, unrelated or about uncovered topics, scored at most 0.09. `KB_RERANK_MIN_SCORE=0.11` sits in the middle of that gap: those 17 are answered without any model call, and every answerable question keeps its passage. The other 13 are near-misses: on-topic questions about a missing detail ("What is the IP rating of the Aurora Gateway?", 0.52). They score as high as real answers, so no cutoff can filter them without losing answers, and the model declines them. Recalibrate after changing documents, chunking or models: `KB_RERANK_MIN_SCORE= php artisan kb:eval --retrieval-only --json=…` records each passage's score. A question uses about 2,000–3,500 reranker tokens. When Jina's free tokens run out, search continues without reranking and the vector cutoff applies again.
 
 Abuse limits keep a public demo up and its database small. Neon's free tier has 0.5 GB, and a 2 MB text upload alone becomes about 2,000 passages (~19 MB):
 
@@ -341,11 +341,10 @@ Streaming answers need a server that doesn't buffer responses. FrankenPHP stream
 - Citations open the cited passage, highlighted within the text around it
 - A harder evaluation set (11 documents, 78 cases) with passage-level evidence checks and results by question type
 - Section-aware passages, embedded with their document title and section heading
-- Hybrid search (vector + BM25 keyword) with a reranker whose cutoff turns away 74% of uncovered questions before any model call
+- Hybrid search (vector + BM25 keyword) with a reranker whose cutoff answers unrelated and uncovered questions without a model call
 
 ### Next
 1. **Sentence-level highlights.** Mark the sentences that support each claim, not the whole cited passage.
-2. **Turn away more uncovered questions before the model call.** On the wiki set, search filters only 2 of 9 unanswerable questions. The model declines the rest correctly, but each one costs a call.
 
 ### Later
 - OCR for scanned PDFs
