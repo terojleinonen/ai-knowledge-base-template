@@ -35,6 +35,7 @@ class AnswerQuestion
         private readonly Retriever $retriever,
         private readonly CitationRepairer $citations,
         private readonly StandaloneQuestion $standalone,
+        private readonly SupportingSentences $supporting,
     ) {}
 
     /**
@@ -194,12 +195,14 @@ class AnswerQuestion
 
             $conversation->messages()->create(['role' => MessageRole::User, 'content' => $question]);
 
+            $passages = array_map(fn (SearchResult $r) => $r->content, $results);
+            $content = config('knowledge.citations.repair') ? $this->citations->repair(trim($answer), $passages) : trim($answer);
+            $highlights = $this->supporting->find($content, $passages);
+
             $message = $conversation->messages()->create([
                 'role' => MessageRole::Assistant,
-                'content' => config('knowledge.citations.repair')
-                    ? $this->citations->repair(trim($answer), array_map(fn (SearchResult $r) => $r->content, $results))
-                    : trim($answer),
-                'sources' => $this->sources($results),
+                'content' => $content,
+                'sources' => array_map(fn (array $source) => $source + ['highlights' => $highlights[$source['index']] ?? []], $this->sources($results)),
             ]);
 
             $conversation->touch();

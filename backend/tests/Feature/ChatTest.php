@@ -117,3 +117,12 @@ it('tells the model which section a passage continues', function () {
 
     KnowledgeBaseAssistant::assertPrompted(fn (AgentPrompt $prompt) => $prompt->contains('(from "travel", section "Daily allowances")'));
 });
+
+it('saves the sentences of each source that support the answer', function () {
+    KnowledgeBaseAssistant::fake(['Employees receive twenty five vacation days [1].']);
+    ingest($this->user, 'handbook', 'Vacation policy. Employees receive twenty five vacation days annually. Parking is free in the courtyard.');
+
+    $this->postJson('/api/chat', ['question' => 'How many vacation days do employees receive?'])
+        ->assertCreated()
+        ->assertJsonPath('data.sources.0.highlights', ['Employees receive twenty five vacation days annually.']);
+});

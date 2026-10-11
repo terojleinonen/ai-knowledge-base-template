@@ -172,6 +172,13 @@ class EvalRunner
             }
         }
 
+        $result->highlights = collect($message->sources ?? [])->pluck('highlights')->flatten()->filter()->values()->all();
+
+        if ($result->evidenceCitations > 0) {
+            $highlights = $result->highlights;
+            $result->highlightHit = collect($highlights)->contains(fn (string $h) => $this->hasEvidence($h, array_merge(...$case->evidence)));
+        }
+
         return $result;
     }
 

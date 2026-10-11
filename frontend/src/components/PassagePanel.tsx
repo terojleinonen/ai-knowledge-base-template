@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { usePassage } from '../hooks/passages'
 import { ApiError } from '../lib/api'
 import type { Source } from '../lib/types'
@@ -11,7 +11,10 @@ import { Spinner } from './ui'
 export function PassagePanel({ source, onClose }: { source: Source; onClose: () => void }) {
   const passage = usePassage(source.chunk_id)
   const closeButton = useRef<HTMLButtonElement>(null)
-  const highlight = useRef<HTMLElement>(null)
+  const highlight = useRef<HTMLElement | null>(null)
+  const setHighlight = (element: HTMLElement | null) => {
+    highlight.current = element
+  }
 
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null
@@ -33,6 +36,7 @@ export function PassagePanel({ source, onClose }: { source: Source; onClose: () 
   }, [passage.data])
 
   const gone = passage.error instanceof ApiError && passage.error.status === 404
+  const highlights = source.highlights ?? []
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
@@ -54,6 +58,7 @@ export function PassagePanel({ source, onClose }: { source: Source; onClose: () 
             {passage.data && (
               <p className="text-xs text-slate-500">
                 Passage {passage.data.position + 1} of {passage.data.total}
+                {highlights.length > 0 && ' · highlighted: what the answer relies on'}
               </p>
             )}
           </div>
@@ -96,13 +101,23 @@ export function PassagePanel({ source, onClose }: { source: Source; onClose: () 
                   {text}
                 </p>
               ))}
-              <mark
-                ref={highlight}
-                className="mb-3 block rounded-lg bg-amber-50 px-3 py-2 text-slate-900 ring-1 ring-amber-200"
-                aria-label="Cited passage"
-              >
-                {passage.data.content}
-              </mark>
+              {highlights.length > 0 ? (
+                <div
+                  ref={setHighlight}
+                  className="mb-3 rounded-lg bg-amber-50/60 px-3 py-2 text-slate-700 ring-1 ring-amber-200"
+                  aria-label="Cited passage"
+                >
+                  {withHighlights(passage.data.content, highlights)}
+                </div>
+              ) : (
+                <mark
+                  ref={setHighlight}
+                  className="mb-3 block rounded-lg bg-amber-50 px-3 py-2 text-slate-900 ring-1 ring-amber-200"
+                  aria-label="Cited passage"
+                >
+                  {passage.data.content}
+                </mark>
+              )}
               {passage.data.after.map((text, i) => (
                 <p key={`a${i}`} className="mb-3">
                   {text}
@@ -117,4 +132,29 @@ export function PassagePanel({ source, onClose }: { source: Source; onClose: () 
       </section>
     </div>
   )
+}
+
+/** The passage with each supporting sentence marked; text the server didn't match stays plain. */
+function withHighlights(content: string, highlights: string[]): ReactNode[] {
+  const ranges = highlights
+    .map((h) => [content.indexOf(h), content.indexOf(h) + h.length] as const)
+    .filter(([start]) => start >= 0)
+    .sort((a, b) => a[0] - b[0])
+
+  const nodes: ReactNode[] = []
+  let cursor = 0
+
+  for (const [start, end] of ranges) {
+    if (start < cursor) continue // overlaps the previous highlight
+    if (start > cursor) nodes.push(content.slice(cursor, start))
+    nodes.push(
+      <mark key={start} className="rounded bg-amber-200 px-0.5 text-slate-900">
+        {content.slice(start, end)}
+      </mark>,
+    )
+    cursor = end
+  }
+
+  nodes.push(content.slice(cursor))
+  return nodes
 }

@@ -202,6 +202,7 @@ class EvaluateKnowledgeBase extends Command
             $this->components->twoColumnDetail('Citation precision (cited the right document)', $pct($s['citation_precision']));
             if ($s['passage_citation_precision'] !== null) {
                 $this->components->twoColumnDetail('Passage citation precision (cited the evidence)', $pct($s['passage_citation_precision']));
+                $this->components->twoColumnDetail('Highlight accuracy (a highlighted sentence has the evidence)', $pct($s['highlight_accuracy']));
             }
             $this->components->twoColumnDetail('Answers without citations', (string) ($s['uncited_answers'] ?? 'n/a'));
             $this->components->twoColumnDetail('Correct abstentions (unanswerable)', $pct($s['correct_abstentions']));

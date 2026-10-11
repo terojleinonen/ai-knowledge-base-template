@@ -54,6 +54,10 @@ final class Summary
                 array_sum(array_map(fn (CaseResult $r) => $r->evidenceCitations, $answeredWithEvidence)),
                 array_sum(array_map(fn (CaseResult $r) => $r->citations, $answeredWithEvidence)),
             ),
+            'highlight_accuracy' => self::ratio(
+                count(array_filter($answered, fn (CaseResult $r) => $r->highlightHit === true)),
+                count(array_filter($answered, fn (CaseResult $r) => $r->highlightHit !== null)),
+            ),
             'uncited_answers' => $answeredAnswerable === [] ? null : count(array_filter($answeredAnswerable, fn (CaseResult $r) => $r->citations === 0 && ! $r->abstained)),
 
             // Chat model tokens (answered cases)
