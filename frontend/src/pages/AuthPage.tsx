@@ -14,7 +14,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [submitting, setSubmitting] = useState(false)
   const isRegister = mode === 'register'
   const config = useAppConfig()
-  const registration = config.data?.registration ?? true
+  const registration = config.data?.registration === true
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

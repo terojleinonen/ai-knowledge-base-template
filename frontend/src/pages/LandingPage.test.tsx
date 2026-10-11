@@ -181,3 +181,29 @@ describe('with Turnstile bot protection', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })
+
+it('waits for the server instead of guessing the call to action', async () => {
+  vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {}))) // a sleeping server: no answer yet
+
+  renderLanding()
+
+  expect(await screen.findByRole('button', { name: /Waking up the server/ })).toBeDisabled()
+  expect(screen.queryByRole('link', { name: 'Create a free account' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Get started' })).not.toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Sign in' })).toBeInTheDocument()
+})
+
+it('offers a retry when the server does not answer', { timeout: 10000 }, async () => {
+  let attempts = 0
+  mockApi((url) => {
+    if (!url.endsWith('/config')) return undefined
+    attempts++
+    // The first request and its two automatic retries fail; the manual retry succeeds.
+    return attempts <= 3 ? { status: 503, body: { message: 'Starting' } } : { body: config() }
+  })
+
+  renderLanding()
+  await userEvent.click(await screen.findByRole('button', { name: 'Try again' }, { timeout: 6000 }))
+
+  expect(await screen.findByRole('button', { name: 'Try the live demo' })).toBeInTheDocument()
+})

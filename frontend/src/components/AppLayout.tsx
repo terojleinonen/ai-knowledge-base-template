@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth'
 import { useConversations, useDeleteConversation } from '../hooks/conversations'
@@ -7,7 +8,6 @@ export function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const conversations = useConversations()
-  const deleteConversation = useDeleteConversation()
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `block truncate rounded-lg px-3 py-2 text-sm ${isActive ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-slate-700 hover:bg-slate-100'}`
@@ -30,28 +30,24 @@ export function AppLayout() {
 
         <div className="mt-6 hidden min-h-0 flex-1 flex-col md:flex">
           <h2 className="px-6 text-xs font-semibold tracking-wide text-slate-500 uppercase">Conversations</h2>
-          <ul className="mt-2 min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
-            {conversations.data?.data.map((c) => (
-              <li key={c.id} className="group flex items-center">
-                <NavLink to={`/app/chat/${c.id}`} className={(s) => `${linkClass(s)} flex-1`} title={c.title}>
-                  {c.title}
-                </NavLink>
-                <button
-                  type="button"
-                  className="ml-1 hidden rounded p-1 text-slate-400 hover:text-red-600 group-hover:block"
-                  aria-label={`Delete conversation ${c.title}`}
-                  onClick={async () => {
-                    await deleteConversation.mutateAsync(c.id)
-                    navigate('/app/chat')
-                  }}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-            {conversations.data?.data.length === 0 && <li className="px-3 text-sm text-slate-400">No conversations yet</li>}
-          </ul>
+          <ConversationList linkClass={linkClass} />
         </div>
+
+        {/* Phones: the list folds away so the chat keeps the screen. */}
+        <details className="mt-2 border-t border-slate-100 md:hidden">
+          <summary className="cursor-pointer px-6 py-2.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+            Conversations{conversations.data ? ` (${conversations.data.data.length})` : ''}
+          </summary>
+          <div className="max-h-60 overflow-y-auto">
+            <ConversationList
+              linkClass={linkClass}
+              onNavigate={(event) => {
+                const details = event.currentTarget.closest('details')
+                if (details) details.open = false
+              }}
+            />
+          </div>
+        </details>
 
         <div className="flex items-center justify-between gap-2 border-t border-slate-200 px-4 py-3">
           <span className="truncate text-sm text-slate-600" title={user?.is_guest ? undefined : user?.email}>
@@ -74,5 +70,42 @@ export function AppLayout() {
         </div>
       </main>
     </div>
+  )
+}
+
+function ConversationList({
+  linkClass,
+  onNavigate,
+}: {
+  linkClass: (state: { isActive: boolean }) => string
+  onNavigate?: (event: MouseEvent<HTMLAnchorElement>) => void
+}) {
+  const navigate = useNavigate()
+  const conversations = useConversations()
+  const deleteConversation = useDeleteConversation()
+
+  return (
+    <ul className="mt-2 min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
+      {conversations.data?.data.map((c) => (
+        <li key={c.id} className="group flex items-center">
+          <NavLink to={`/app/chat/${c.id}`} className={(s) => `${linkClass(s)} flex-1`} title={c.title} onClick={onNavigate}>
+            {c.title}
+          </NavLink>
+          {/* Always visible on touch screens; revealed on hover or focus with a mouse. */}
+          <button
+            type="button"
+            className="ml-1 rounded p-1 text-slate-400 hover:text-red-600 md:hidden md:group-focus-within:block md:group-hover:block"
+            aria-label={`Delete conversation ${c.title}`}
+            onClick={async () => {
+              await deleteConversation.mutateAsync(c.id)
+              navigate('/app/chat')
+            }}
+          >
+            ×
+          </button>
+        </li>
+      ))}
+      {conversations.data?.data.length === 0 && <li className="px-3 text-sm text-slate-400">No conversations yet</li>}
+    </ul>
   )
 }

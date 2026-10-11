@@ -5,7 +5,9 @@ import { PassagePanel } from '../components/PassagePanel'
 import { plainText } from '../lib/markdown'
 import { Alert, Button, Spinner } from '../components/ui'
 import { useConversation } from '../hooks/conversations'
+import { useAppConfig } from '../hooks/config'
 import { useDocuments } from '../hooks/documents'
+import { useAuth } from '../auth/useAuth'
 import { useStreamingAnswer, type StreamingState } from '../hooks/useStreamingAnswer'
 import type { Message, Source } from '../lib/types'
 
@@ -16,6 +18,9 @@ export function ChatPage() {
   const conversation = useConversation(conversationId)
   const documents = useDocuments()
   const { ask, stop, streaming, error } = useStreamingAnswer()
+  const { user } = useAuth()
+  const config = useAppConfig()
+  const examples = user?.is_guest ? (config.data?.demo_questions ?? []) : []
   const [question, setQuestion] = useState('')
   const [cited, setCited] = useState<Source | null>(null)
   const closePassage = useCallback(() => setCited(null), [])
@@ -29,9 +34,9 @@ export function ChatPage() {
     bottom.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' })
   }, [messages.length, streaming?.text.length, streaming?.phase])
 
-  async function submit(event?: FormEvent) {
+  async function submit(event?: FormEvent, asked?: string) {
     event?.preventDefault()
-    const text = question.trim()
+    const text = (asked ?? question).trim()
     if (text.length < 2 || busy) return
 
     setQuestion('')
@@ -58,6 +63,21 @@ export function ChatPage() {
             <div className="py-16 text-center">
               <h1 className="text-2xl font-semibold tracking-tight">What would you like to know?</h1>
               <p className="mt-2 text-sm text-slate-600">Answers are based only on your uploaded documents, with citations.</p>
+              {examples.length > 0 && hasReadyDocs && (
+                <div className="mt-8 flex flex-col items-center gap-2">
+                  <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Try asking</p>
+                  {examples.map((example) => (
+                    <button
+                      key={example}
+                      type="button"
+                      onClick={() => void submit(undefined, example)}
+                      className="max-w-full rounded-full bg-white px-4 py-2 text-sm text-slate-700 shadow-xs ring-1 ring-slate-200 hover:bg-indigo-50 hover:text-indigo-700 hover:ring-indigo-200 focus-visible:outline-2 focus-visible:outline-indigo-600"
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              )}
               {!hasReadyDocs && (
                 <p className="mt-4 text-sm text-amber-700">
                   You have no processed documents yet.{' '}
@@ -100,7 +120,7 @@ export function ChatPage() {
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={onKeyDown}
             maxLength={2000}
-            placeholder="Ask a question about your documents…"
+            placeholder="Ask about your documents…"
             className="max-h-40 min-h-11 flex-1 resize-none rounded-xl border-0 px-4 py-2.5 ring-1 ring-slate-300 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
           />
           {busy ? (
@@ -160,7 +180,7 @@ function ChatMessage({ message, onCite }: { message: Message; onCite: (source: S
 function SourceList({ sources, onCite }: { sources: Source[]; onCite: (source: Source) => void }) {
   return (
     <details className="mt-4 border-t border-slate-100 pt-3">
-      <summary className="cursor-pointer text-xs font-semibold tracking-wide text-slate-500 uppercase">{sources.length} sources</summary>
+      <summary className="cursor-pointer text-xs font-semibold tracking-wide text-slate-500 uppercase">{sources.length === 1 ? '1 source' : `${sources.length} sources`}</summary>
       <ol className="mt-3 space-y-3">
         {sources.map((s) => (
           <li key={s.index} className="text-sm">
@@ -169,7 +189,6 @@ function SourceList({ sources, onCite }: { sources: Source[]; onCite: (source: S
                 {s.index}
               </span>
               {s.document_title}
-              <span className="ml-2 text-xs font-normal text-slate-400">relevance {Math.round(s.score * 100)}%</span>
             </p>
             <p className="mt-1 text-slate-600">{s.highlights?.length ? s.highlights.join(' … ') : plainText(s.excerpt)}</p>
             <button
