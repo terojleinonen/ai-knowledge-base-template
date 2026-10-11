@@ -90,8 +90,11 @@ class CitationRepairer
         foreach (explode("\n", $answer) as $line) {
             $line = trim(preg_replace('/^\s*(?:[-*•]|\d+[.)])\s+/u', '', $line) ?? $line);
 
-            // Skip blank lines and headings ("# Title", "**Title**", "**Title:**").
-            if ($line === '' || str_starts_with($line, '#') || preg_match('/^\*\*[^*]+\*\*:?$/u', $line) === 1) {
+            // Skip blank lines and headings ("# Title", "**Title**", "**Title:**"), but not a bold
+            // sentence ("**The sources don't say.**").
+            $boldHeading = preg_match('/^\*\*[^*]+\*\*:?$/u', $line) === 1 && preg_match('/[.!?]\*\*$/u', $line) === 0;
+
+            if ($line === '' || str_starts_with($line, '#') || $boldHeading) {
                 continue;
             }
 

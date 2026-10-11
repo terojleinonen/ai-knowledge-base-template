@@ -192,5 +192,10 @@ it('decides whether a whole answer declines', function (string $answer, bool $de
         "The sources don't contain any information about an \"Aurora Pro enterprise support contract\" — no such product or support tier is mentioned.\n\nThe only pricing listed is [1]:\n- Aurora Node: 149 euros [1]\n- Aurora Gateway: 490 euros [1]",
         true,
     ],
+    // Real claude-opus-5-5 answer: the whole refusal sentence is in bold.
+    'bold refusal' => [
+        "**The sources don't say how long the Firefly's battery lasts.**\n\nWhat they do say about Firefly:\n- It runs on a single coin cell [1].",
+        true,
+    ],
     'answer first, caveat later' => ['Employees get 30 vacation days per year [1]. The sources don\'t say how part-time staff are treated.', false],
 ]);
