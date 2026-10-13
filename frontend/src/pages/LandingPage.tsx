@@ -18,12 +18,18 @@ export function LandingPage() {
   // offering sign-up on a demo with registration closed leads to a form that fails.
   const registration = config.data?.registration === true
   const demo = config.data?.demo === true
+  const sourceUrl = config.data?.source_url ?? null
 
   return (
     <div className="min-h-full bg-white">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <Logo />
         <nav className="flex items-center gap-2 text-sm font-semibold">
+          {sourceUrl && (
+            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg px-3.5 py-2 text-slate-700 hover:bg-slate-100">
+              Source code
+            </a>
+          )}
           {user ? (
             <Link to="/app" className="rounded-lg bg-indigo-600 px-3.5 py-2 text-white hover:bg-indigo-500">
               Open app
@@ -105,6 +111,15 @@ export function LandingPage() {
           </div>
         </section>
       </main>
+
+      {sourceUrl && (
+        <footer className="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-500">
+          Open source: Laravel and React, with retrieval evaluations.{' '}
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-600 hover:text-indigo-500">
+            View the code on GitHub
+          </a>
+        </footer>
+      )}
     </div>
   )
 }
