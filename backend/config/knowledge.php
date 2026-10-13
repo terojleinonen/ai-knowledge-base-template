@@ -132,6 +132,8 @@ return [
         'enabled' => (bool) env('KB_DEMO_ENABLED', false),
         'dataset' => env('KB_DEMO_DATASET', 'evals/northwind'),
         'guest_ttl_hours' => (int) env('KB_DEMO_GUEST_TTL_HOURS', 24),
+        // Link to the project's source code, shown on the landing page and to demo guests.
+        'source_url' => env('KB_SOURCE_URL') ?: null,
     ],
 
     // Cloudflare Turnstile on "Try the live demo" (enabled when the secret key is set).

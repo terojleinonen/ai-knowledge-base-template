@@ -42,6 +42,7 @@
         <env name="KB_RETRIEVAL_MIN_SCORE" value="0.2" force="true"/>
         <env name="KB_RETRIEVAL_MODE" value="hybrid" force="true"/>
         <env name="KB_FOLLOW_UP_MODE" value="combine" force="true"/>
+        <env name="KB_SOURCE_URL" value="" force="true"/>
         <env name="KB_FOLLOW_UP_PROVIDER" value="" force="true"/>
         <env name="KB_FOLLOW_UP_MODEL" value="" force="true"/>
         <env name="KB_RERANK_PROVIDER" value="" force="true"/>

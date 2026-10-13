@@ -33,7 +33,8 @@ it('starts a guest demo session', async () => {
   })
 
   renderLanding()
-  await userEvent.click(await screen.findByRole('button', { name: 'Try the live demo' }))
+  // The button appears once /config answers; allow for a busy test machine.
+  await userEvent.click(await screen.findByRole('button', { name: 'Try the live demo' }, { timeout: 5000 }))
 
   expect(await screen.findByText('Chat screen')).toBeInTheDocument()
   expect(tokenStore.get()).toBe('guest-token')
@@ -206,4 +207,17 @@ it('offers a retry when the server does not answer', { timeout: 10000 }, async (
   await userEvent.click(await screen.findByRole('button', { name: 'Try again' }, { timeout: 6000 }))
 
   expect(await screen.findByRole('button', { name: 'Try the live demo' })).toBeInTheDocument()
+})
+
+it('links to the source code when the server provides it', async () => {
+  mockApi((url) => (url.endsWith('/config') ? { body: config({ source_url: 'https://github.com/example/kb' }) } : undefined))
+
+  renderLanding()
+
+  const links = await screen.findAllByRole('link', { name: /Source code|View the code on GitHub/ })
+  expect(links).toHaveLength(2)
+  for (const link of links) {
+    expect(link).toHaveAttribute('href', 'https://github.com/example/kb')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  }
 })

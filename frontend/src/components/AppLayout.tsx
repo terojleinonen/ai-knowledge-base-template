@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth'
+import { useAppConfig } from '../hooks/config'
 import { useConversations, useDeleteConversation } from '../hooks/conversations'
 import { Button, Logo } from './ui'
 
@@ -8,6 +9,7 @@ export function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const conversations = useConversations()
+  const sourceUrl = useAppConfig().data?.source_url ?? null
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `block truncate rounded-lg px-3 py-2 text-sm ${isActive ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-slate-700 hover:bg-slate-100'}`
@@ -63,6 +65,14 @@ export function AppLayout() {
         {user?.is_guest && (
           <p className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-800">
             You're using a temporary demo account with sample documents. It's deleted after 24 hours.
+            {sourceUrl && (
+              <>
+                {' '}
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-amber-900">
+                  View the source on GitHub
+                </a>
+              </>
+            )}
           </p>
         )}
         <div className="min-h-0 flex-1 overflow-y-auto">

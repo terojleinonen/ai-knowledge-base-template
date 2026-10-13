@@ -59,6 +59,8 @@ services:
         value: "0.2"           # calibrate with: php artisan kb:eval --retrieval-only
       - key: KB_RETRIEVAL_MODE
         value: hybrid            # vector + BM25 keyword search
+      - key: KB_SOURCE_URL
+        value: https://github.com/terojleinonen/ai-knowledge-base-template   # "View the source" link in the app
       - key: KB_FOLLOW_UP_MODE
         value: rewrite           # make follow-ups ("How long must they be?") searchable
       - key: KB_FOLLOW_UP_PROVIDER

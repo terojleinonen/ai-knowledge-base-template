@@ -12,6 +12,8 @@ export interface AppConfig {
   demo: boolean
   registration: boolean
   turnstile_site_key: string | null
+  /** Link to the project's source code, if the server sets one. */
+  source_url?: string | null
   /** Example questions about the demo documents (empty outside demo mode). */
   demo_questions?: string[]
   limits: {

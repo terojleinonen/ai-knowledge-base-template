@@ -118,6 +118,13 @@ it('exposes public config for the frontend', function () {
         ->assertJsonPath('demo_questions.0', 'How many vacation days can be carried over?');
 });
 
+it('links to the source code when configured', function () {
+    $this->getJson('/api/config')->assertJsonPath('source_url', null);
+
+    config(['knowledge.demo.source_url' => 'https://github.com/example/kb']);
+    $this->getJson('/api/config')->assertJsonPath('source_url', 'https://github.com/example/kb');
+});
+
 it('suggests no example questions outside demo mode', function () {
     config(['knowledge.demo.enabled' => false]);
 

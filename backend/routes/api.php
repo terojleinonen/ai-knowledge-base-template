@@ -14,6 +14,7 @@ Route::get('config', fn () => [
     'registration' => (bool) config('knowledge.registration.enabled'),
     'limits' => config('knowledge.limits'),
     'turnstile_site_key' => config('knowledge.turnstile.secret_key') ? config('knowledge.turnstile.site_key') : null,
+    'source_url' => config('knowledge.demo.source_url'),
     'demo_questions' => config('knowledge.demo.enabled') ? app(DemoAccounts::class)->exampleQuestions() : [],
 ]);
 
